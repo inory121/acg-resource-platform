@@ -1,0 +1,69 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: acg-resource-platform
+  
+  # 数据库配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/acg_resource?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: 12345
+    
+  # Redis配置 - 暂时注释掉
+  # data:
+  #   redis:
+  #     host: localhost
+  #     port: 6379
+  #     password: 
+  #     database: 0
+  #     timeout: 10000ms
+  #     lettuce:
+  #       pool:
+  #         max-active: 8
+  #         max-wait: -1ms
+  #         max-idle: 8
+  #         min-idle: 0
+
+# MyBatis-Plus配置
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# JWT配置
+jwt:
+  secret: "AikKgcFmR2xVf0A/4ca/iEUpE7djWML6g8yO6iwEvgikr7YFn0XcXePmZ/BL09YY2r2YjaMyeXHl8BDGkrrLnA=="
+  expiration: 86400000  # 24小时
+
+# 文件上传配置
+file:
+  upload:
+    path: /uploads/
+    max-size: 10MB
+
+# 日志配置
+logging:
+  level:
+    com.acg: debug
+    org.springframework.security: debug
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# SpringDoc OpenAPI配置
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  default-produces-media-type: application/json
+  default-consumes-media-type: application/json 

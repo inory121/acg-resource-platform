@@ -1,0 +1,46 @@
+# Node
+node_modules/
+dist/
+
+# Vite
+.vite/
+
+# VSCode
+.vscode/
+
+# IDEA
+.idea/
+
+# Mac
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Java
+*.class
+*.jar
+*.war
+*.iml
+
+# Maven/Gradle
+backend/target/
+backend/.mvn/
+backend/.gradle/
+
+# Logs
+*.log
+logs/
+
+# 环境变量
+.env
+.env.*
+
+# 临时文件
+*.swp
+*.swo
+*.tmp
+
+# 其他
+frontend/pnpm-lock.yaml
+frontend/yarn.lock 
