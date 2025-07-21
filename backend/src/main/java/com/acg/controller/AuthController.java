@@ -4,7 +4,6 @@ import com.acg.common.Result;
 import com.acg.dto.LoginRequest;
 import com.acg.dto.RegisterRequest;
 import com.acg.service.UserService;
-import com.acg.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +25,6 @@ import java.util.Map;
 public class AuthController {
 
     private final UserService userService;
-    private final JwtUtil jwtUtil;
 
     @PostMapping("/login")
     @Operation(summary = "用户登录", description = "用户登录接口")

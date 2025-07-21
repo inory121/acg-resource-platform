@@ -249,7 +249,7 @@ const { categories } = storeToRefs(categoryStore)
 const subCategories = computed(() => categories.value.filter((c: any) => c.parentId !== 0))
 
 onMounted(() => {
-  categoryStore.fetchCategories()
+  // categoryStore.fetchCategories()
   // 检查登录状态
   const token = localStorage.getItem('token')
   if (token) {

@@ -1,6 +1,6 @@
 <template>
   <aside class="sidebar" :class="{ collapsed: collapsed }">
-    <div class="sidebar-user-info">
+    <div v-if="!props.hideUserInfo" class="sidebar-user-info">
       <el-avatar v-if="isLoggedIn" :src="userInfo?.avatar" size="large" class="sidebar-avatar" @click="goUserCenter">
         {{ userInfo?.nickname?.charAt(0) || userInfo?.username?.charAt(0) }}
       </el-avatar>
@@ -12,14 +12,14 @@
           <i class="fas fa-bars"></i>
         </el-button>
       </div>
-      <h3 class="category-title">资源分类</h3>
+      <h3 class="category-title">热门资源分类</h3>
       <el-menu
         :default-active="String(activeCategory)"
         class="category-menu"
         @select="onSelect"
       >
         <el-menu-item
-          v-for="cat in categoriesToShow"
+          v-for="cat in hotCategories"
           :key="cat.id"
           :index="cat.id.toString()"
         >
@@ -40,7 +40,7 @@
         @select="onSelect"
       >
         <el-menu-item
-          v-for="cat in categoriesToShow"
+          v-for="cat in hotCategories"
           :key="cat.id"
           :index="cat.id.toString()"
         >
@@ -56,21 +56,39 @@
 import { storeToRefs } from 'pinia'
 import { useCategoryStore } from '@/store/category'
 import type { CategoryItem } from '@/store/category'
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useUserStore } from '@/store/user'
 import { useRouter } from 'vue-router'
 
 const props = defineProps<{
   activeCategory: string | number,
   categories?: CategoryItem[],
-  collapsed?: boolean
+  collapsed?: boolean,
+  mainCategoryId?: number,
+  hideUserInfo?: boolean
 }>()
 const emit = defineEmits(['select', 'toggle'])
 
 const categoryStore = useCategoryStore()
-const { categories: globalCategories } = storeToRefs(categoryStore)
+// const { categories: globalCategories } = storeToRefs(categoryStore)
 
-const categoriesToShow = computed(() => props.categories ?? globalCategories.value)
+const hotCategories = computed(() => {
+  // 优先使用 props 传入的 categories，如果未传入，则使用 store 中的全局 categories
+  const sourceCategories = props.categories || categoryStore.categories;
+
+  if (props.mainCategoryId) {
+    // 只显示当前主分类下的子分类
+    return sourceCategories
+      .filter(cat => cat.parentId === props.mainCategoryId)
+      .sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0));
+  } else {
+    // 首页：全站热门子分类（前10，按 sort_order 排序）
+    return sourceCategories
+      .filter(cat => cat.parentId !== 0)
+      .sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0))
+      .slice(0, 10);
+  }
+});
 
 categoryStore.fetchCategories()
 
@@ -85,12 +103,6 @@ const userInfo = computed(() => userStore.userInfo)
 const isLoggedIn = computed(() => !!userStore.token)
 function goUserCenter() {
   router.push('/user')
-}
-function goLogin() {
-  router.push('/login')
-}
-function goRegister() {
-  router.push('/register')
 }
 </script>
 <style scoped>

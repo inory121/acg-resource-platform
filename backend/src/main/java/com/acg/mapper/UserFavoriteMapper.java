@@ -24,10 +24,4 @@ public interface UserFavoriteMapper extends BaseMapper<UserFavorite> {
             "WHERE f.user_id = #{userId} AND r.deleted = 0 " +
             "ORDER BY f.created_time DESC")
     IPage<UserFavorite> selectUserFavorites(Page<UserFavorite> page, @Param("userId") Long userId);
-    
-    /**
-     * 检查用户是否已收藏资源
-     */
-    @Select("SELECT COUNT(*) FROM user_favorite WHERE user_id = #{userId} AND resource_id = #{resourceId}")
-    int checkUserFavorite(@Param("userId") Long userId, @Param("resourceId") Long resourceId);
 }

@@ -9,32 +9,37 @@ export interface ResourceParams {
   tags?: string;
 }
 
-export function getResourceList(params: { current?: number; size?: number; categoryId?: number; keyword?: string }) {
-  return axios.get('/api/resources', { params });
+export function getResourceList(params?: any) {
+  return axios.get('/resources', { params });
 }
 
 export function getResourceById(id: number) {
-  return axios.get(`/api/resources/${id}`);
+  return axios.get(`/resources/${id}`);
 }
 
-export function createResource(data: ResourceParams) {
-  return axios.post('/api/resources', data);
+export function createResource(data: any) {
+  return axios.post('/resources', data);
 }
 
-export function updateResource(id: number, data: Partial<ResourceParams>) {
-  return axios.put(`/api/resources/${id}`, data);
+export function updateResource(id: number, data: any) {
+  return axios.put(`/resources/${id}`, data);
 }
 
 export function deleteResource(id: number) {
-  return axios.delete(`/api/resources/${id}`);
+  return axios.delete(`/resources/${id}`);
+}
+
+// 手动触发所有资源的状态检测
+export function checkAllResourcesStatus() {
+  return axios.post('/admin/resources/check-status');
 }
 
 export function getHotResources(limit = 10) {
-  return axios.get('/api/resources/hot', { params: { limit } });
+  return axios.get('/resources/hot', { params: { limit } });
 }
 
 export function getLatestResources(limit = 10) {
-  return axios.get('/api/resources/latest', { params: { limit } });
+  return axios.get('/resources/latest', { params: { limit } });
 }
 
 export function likeResource(id: number) {

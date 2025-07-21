@@ -41,6 +41,9 @@
         <el-form-item label="分类名称">
           <el-input v-model="categoryForm.name" type="text" required />
         </el-form-item>
+        <el-form-item label="分类编码">
+          <el-input v-model="categoryForm.code" type="text" required placeholder="唯一英文编码，如 anime-online" />
+        </el-form-item>
         <el-form-item label="描述">
           <el-input v-model="categoryForm.description" type="textarea" rows="3" />
         </el-form-item>
@@ -72,6 +75,7 @@ import { getCategories, createCategory, updateCategory, deleteCategory as delete
 interface Category {
   id: number
   name: string
+  code: string
   description: string
   icon: string
   sortOrder: number
@@ -90,6 +94,7 @@ const editingCategory = ref<Category | null>(null)
 
 const categoryForm = ref({
   name: '',
+  code: '',
   description: '',
   icon: '',
   sortOrder: 0,
@@ -132,6 +137,7 @@ function openAddModal(parentId = 0) {
   editingCategory.value = null
   categoryForm.value = {
     name: '',
+    code: '',
     description: '',
     icon: '',
     sortOrder: 0,
@@ -144,6 +150,7 @@ const editCategory = (category: Category) => {
   editingCategory.value = category
   categoryForm.value = {
     name: category.name,
+    code: category.code,
     description: category.description,
     icon: category.icon,
     sortOrder: category.sortOrder,
@@ -182,6 +189,7 @@ const closeModal = () => {
   editingCategory.value = null
   categoryForm.value = {
     name: '',
+    code: '',
     description: '',
     icon: '',
     sortOrder: 0,

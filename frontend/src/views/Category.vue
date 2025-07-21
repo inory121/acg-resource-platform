@@ -5,8 +5,15 @@
     </el-tabs>
     <div class="container">
       <!-- 左侧导航：只显示当前主分区下的子分区 -->
-      <CategorySidebar :active-category="activeCategory" :categories="subCategories" :collapsed="sidebarCollapsed"
-        @toggle="handleSidebarToggle" @select="onCategorySelect" />
+      <CategorySidebar
+        :mainCategoryId="activeMainCategory"
+        :active-category="activeCategory"
+        :categories="subCategories"
+        :collapsed="sidebarCollapsed"
+        :hideUserInfo="true"
+        @toggle="handleSidebarToggle"
+        @select="onCategorySelect"
+      />
       <!-- 右侧内容 -->
       <main class="content" :class="{ 'content-collapsed': sidebarCollapsed }">
         <el-card class="resource-list-card">
@@ -41,6 +48,7 @@ import { ElTabs, ElTabPane, type TabsPaneContext } from 'element-plus';
 
 const router = useRouter();
 const route = useRoute();
+const mainCategoryId = Number(route.params.id);
 const resources = ref<any[]>([]);
 
 const categoryStore = useCategoryStore()
@@ -87,7 +95,11 @@ function goDetail(id: number) {
 // 获取资源列表，categoryId为当前选中子分区
 async function fetchResources() {
   const res = await getResourceList({ categoryId: activeCategory.value });
-  resources.value = res.data.data.records || [];
+  if (res.data.code === 200 && res.data.data) {
+    resources.value = Array.isArray(res.data.data) ? res.data.data : res.data.data.records || [];
+  } else {
+    resources.value = [];
+  }
 }
 // 监听分类数据和路由参数变化，自动同步分区高亮和资源
 watch(

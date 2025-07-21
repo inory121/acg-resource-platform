@@ -36,6 +36,7 @@ declare module 'vue' {
     ElTabPane: typeof import('element-plus/es')['ElTabPane']
     ElTabs: typeof import('element-plus/es')['ElTabs']
     ElTag: typeof import('element-plus/es')['ElTag']
+    ElTreeSelect: typeof import('element-plus/es')['ElTreeSelect']
     ElUpload: typeof import('element-plus/es')['ElUpload']
     FavoritesTab: typeof import('./src/components/user/FavoritesTab.vue')['default']
     HeaderBar: typeof import('./src/components/HeaderBar.vue')['default']

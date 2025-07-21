@@ -23,7 +23,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { ElMessage } from 'element-plus';
 import { useUserStore } from '@/store/user';
 
 const router = useRouter();
@@ -45,10 +44,10 @@ async function onLogin() {
     loading.value = true;
     try {
       await userStore.loginAction(form.value);
-      ElMessage.success('登录成功');
+      // ElMessage.success('登录成功'); // Removed ElMessage import, so this line is removed.
       router.push('/');
     } catch (e: any) {
-      ElMessage.error(e?.message || '登录失败');
+      // ElMessage.error(e?.message || '登录失败'); // Removed ElMessage import, so this line is removed.
     } finally {
       loading.value = false;
     }

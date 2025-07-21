@@ -72,7 +72,7 @@ public class Resource {
     private Long likeCount;
 
     /**
-     * 状态：0-禁用，1-正常
+     * 状态：0-禁用，1-无法访问
      */
     @TableField("status")
     private Integer status;
@@ -107,4 +107,22 @@ public class Resource {
     @TableLogic
     @TableField("deleted")
     private Integer deleted;
+
+    /**
+     * 最近检测时间
+     */
+    @TableField("last_check_time")
+    private LocalDateTime lastCheckTime;
+
+    /**
+     * 连续检测失败次数
+     */
+    @TableField("check_fail_count")
+    private Integer checkFailCount;
+
+    /**
+     * 最近检测结果 1-可用 0-异常
+     */
+    @TableField("last_check_status")
+    private Integer lastCheckStatus;
 } 

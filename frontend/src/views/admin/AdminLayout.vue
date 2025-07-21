@@ -1,7 +1,8 @@
 <template>
   <div class="admin-layout">
-    <!-- 侧边栏（自定义实现，保留原有风格） -->
-    <div class="sidebar" :class="{ collapsed: sidebarCollapsed }">
+
+    <!-- 侧边栏 -->
+    <div class="admin-sidebar" :class="{ collapsed: sidebarCollapsed }">
       <div class="sidebar-header">
         <h2 v-if="!sidebarCollapsed">管理后台</h2>
         <h2 v-else>后台</h2>
@@ -10,48 +11,42 @@
         </el-button>
       </div>
       <nav class="sidebar-nav">
-        <router-link 
-          to="/admin/dashboard" 
-          class="nav-item"
-          :class="{ active: $route.path === '/admin/dashboard' }"
-        >
+        <router-link to="/admin/dashboard" class="nav-item" :class="{ active: $route.path === '/admin/dashboard' }">
           <i class="fas fa-tachometer-alt"></i>
           <span v-if="!sidebarCollapsed">仪表盘</span>
         </router-link>
-        <router-link 
-          to="/admin/resources" 
-          class="nav-item"
-          :class="{ active: $route.path === '/admin/resources' }"
-        >
+        <router-link to="/admin/resources" class="nav-item" :class="{ active: $route.path === '/admin/resources' }">
           <i class="fas fa-file-alt"></i>
           <span v-if="!sidebarCollapsed">资源管理</span>
         </router-link>
-        <router-link 
-          to="/admin/categories" 
-          class="nav-item"
-          :class="{ active: $route.path === '/admin/categories' }"
-        >
+        <router-link to="/admin/categories" class="nav-item" :class="{ active: $route.path === '/admin/categories' }">
           <i class="fas fa-folder"></i>
           <span v-if="!sidebarCollapsed">分类管理</span>
         </router-link>
-        <router-link 
-          to="/admin/users" 
-          class="nav-item"
-          :class="{ active: $route.path === '/admin/users' }"
-        >
+        <router-link to="/admin/users" class="nav-item" :class="{ active: $route.path === '/admin/users' }">
           <i class="fas fa-users"></i>
           <span v-if="!sidebarCollapsed">用户管理</span>
         </router-link>
       </nav>
-      <div class="sidebar-logout">
-        <el-button class="logout-btn" @click="logout" type="danger" size="small">
+      <div class="sidebar-footer">
+        <el-button class="footer-btn" @click="goHome" type="primary" size="large">
+          <i class="fas fa-home"></i>
+          <span v-if="!sidebarCollapsed">首页</span>
+        </el-button>
+        <el-button class="footer-btn" @click="logout" type="danger" size="large">
           <i class="fas fa-sign-out-alt"></i>
           <span v-if="!sidebarCollapsed">退出</span>
         </el-button>
       </div>
     </div>
     <!-- 主内容区域 -->
-    <div class="main-content">
+    <div class="admin-content-wrapper">
+      <!-- 主题切换按钮 -->
+      <div class="theme-toggle-btn">
+        <el-button @click="toggleTheme" circle >
+          <i :class="isDark ? 'fas fa-sun' : 'fas fa-moon'"></i>
+        </el-button>
+      </div>
       <main class="page-content">
         <router-view />
       </main>
@@ -60,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/store/user'
 
@@ -88,26 +83,46 @@ const logout = async () => {
   await userStore.logout()
   router.push('/login')
 }
+
+const goHome = () => {
+  router.push('/')
+}
+
+// 官方推荐的暗黑模式切换逻辑
+const isDark = ref(localStorage.getItem('theme') === 'dark')
+function toggleTheme() {
+  isDark.value = !isDark.value
+  document.documentElement.classList.toggle('dark', isDark.value)
+  localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
+}
+onMounted(() => {
+  if (isDark.value) document.documentElement.classList.add('dark')
+})
 </script>
 
-<style scoped>
+<style>
 .admin-layout {
   display: flex;
   height: 100vh;
 }
 
-.sidebar {
+.theme-toggle-btn {
+  display: flex;
+  align-self: flex-end;
+  padding: 20px 20px 0 0;
+}
+
+.admin-sidebar {
   width: 250px;
-  background: #2c3e50;
-  color: white;
-  transition: width 0.3s ease;
+  background: var(--admin-sidebar-bg, #2c3e50);
+  color: var(--admin-sidebar-color, #fff);
+  transition: width 0.3s;
   display: flex;
   flex-direction: column;
 }
 
-.sidebar.collapsed {
+.admin-sidebar.collapsed {
   width: 60px;
-  transition: width 0.3s ease;
 }
 
 .sidebar-header {
@@ -127,7 +142,7 @@ const logout = async () => {
 .collapse-btn {
   background: none;
   border: none;
-  color: white;
+  color: inherit;
   cursor: pointer;
   font-size: 16px;
 }
@@ -137,23 +152,41 @@ const logout = async () => {
   padding: 20px 0;
 }
 
+.sidebar-footer {
+  padding: 10px;
+  border-top: 1px solid #34495e;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.footer-btn {
+  flex: 1;
+  margin-left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
 .nav-item {
   display: flex;
   align-items: center;
   padding: 15px 20px;
-  color: #bdc3c7;
+  color: inherit;
   text-decoration: none;
-  transition: all 0.3s ease;
+  transition: all 0.3s;
 }
 
 .nav-item:hover {
   background: #34495e;
-  color: white;
+  color: #fff;
 }
 
 .nav-item.active {
   background: #3498db;
-  color: white;
+  color: #fff;
 }
 
 .nav-item i {
@@ -180,107 +213,96 @@ const logout = async () => {
   justify-content: center;
   gap: 8px;
   font-size: 16px;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s;
 }
 
 .logout-btn:hover {
   background: #c82333;
 }
 
-.main-content {
+.admin-content-wrapper {
   flex: 1;
   display: flex;
   flex-direction: column;
   background: #f8f9fa;
 }
 
-.top-header {
-  background: white;
-  padding: 15px 30px;
-  border-bottom: 1px solid #e9ecef;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.menu-btn {
-  background: none;
-  border: none;
-  font-size: 18px;
-  cursor: pointer;
-  color: #6c757d;
-}
-
-.header-left h1 {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 600;
-  color: #2c3e50;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.user-info span {
-  color: #6c757d;
-  font-weight: 500;
-}
-
-.logout-btn {
-  background: #dc3545;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: background-color 0.3s ease;
-}
-
-.logout-btn:hover {
-  background: #c82333;
-}
-
-.page-content {
-  flex: 1;
-  padding: 30px;
-  overflow-y: auto;
-}
-
 @media (max-width: 768px) {
-  .sidebar,
-  .sidebar.collapsed {
+
+  .admin-sidebar,
+  .admin-sidebar.collapsed {
     width: 200px;
     min-width: 60px;
     max-width: 100vw;
-    transition: width 0.3s ease, transform 0.3s;
+    transition: width 0.3s, transform 0.3s;
   }
-  .sidebar {
+
+  .admin-sidebar {
     transform: translateX(-100%);
   }
-  .sidebar.collapsed {
+
+  .admin-sidebar.collapsed {
     transform: translateX(0);
     width: 60px;
   }
-  .main-content {
+
+  .admin-content-wrapper {
     margin-left: 0;
   }
 }
-</style> 
+
+:root .admin-sidebar {
+  --admin-sidebar-bg: #2c3e50;
+  --admin-sidebar-color: #fff;
+}
+
+html.dark .admin-sidebar {
+  --admin-sidebar-bg: #232b36;
+  --admin-sidebar-color: #bbb;
+}
+
+html.dark .admin-content-wrapper {
+  background: #181a20;
+  color: #d1d5db;
+}
+
+html.dark .page-header h2 {
+  color: #f3f4f6;
+}
+
+html.dark .search-bar {
+  background-color: transparent;
+}
+
+/* Dashboard.vue specific dark styles */
+html.dark .stat-card,
+html.dark .chart-card,
+html.dark .recent-activities {
+  background: #232b36;
+  color: #d1d5db;
+  box-shadow: none;
+  border: 1px solid #374151;
+}
+
+html.dark .stat-content h3,
+html.dark .chart-card h3,
+html.dark .recent-activities h3,
+html.dark .activity-text {
+  color: #f3f4f6;
+}
+
+html.dark .stat-content p,
+html.dark .activity-time {
+  color: #9ca3af;
+}
+
+html.dark .chart-placeholder {
+  background: #1f2937;
+  border-color: #374151;
+  color: #9ca3af;
+}
+
+html.dark .activity-item {
+  background: #1f2937;
+}
+</style>

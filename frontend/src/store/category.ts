@@ -6,6 +6,7 @@ export interface CategoryItem {
   name: string;
   icon?: string;
   parentId: number;
+  sortOrder: number;
 }
 
 export const useCategoryStore = defineStore('category', {

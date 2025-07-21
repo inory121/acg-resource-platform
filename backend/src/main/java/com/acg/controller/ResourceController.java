@@ -1,12 +1,11 @@
 package com.acg.controller;
 
 import com.acg.common.Result;
-import com.acg.common.exception.BusinessException;
 import com.acg.entity.Resource;
 import com.acg.service.ResourceService;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,26 +13,25 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/resources")
 @CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class ResourceController {
 
-    @Autowired
-    private ResourceService resourceService;
+    private final ResourceService resourceService;
 
-    /**
-     * 分页查询资源列表
-     */
     @GetMapping
-    public Result<IPage<Resource>> getResourcePage(
-            @RequestParam(defaultValue = "1") Integer current,
-            @RequestParam(defaultValue = "10") Integer size,
+    public Result<Object> getResourceList(
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) Long categoryId) {
-        try {
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Integer current,
+            @RequestParam(required = false) Integer size) {
+
+        if (current != null && size != null) {
             Page<Resource> page = new Page<>(current, size);
-            IPage<Resource> result = resourceService.getResourcePage(page, keyword, categoryId);
-            return Result.success(result);
-        } catch (Exception e) {
-            return Result.error("获取资源列表失败: " + e.getMessage());
+            IPage<Resource> pageResult = resourceService.getResourcePage(page, keyword, categoryId);
+            return Result.success(pageResult);
+        } else {
+            List<Resource> listResult = resourceService.getResourceList(keyword, categoryId);
+            return Result.success(listResult);
         }
     }
 
@@ -50,8 +48,6 @@ public class ResourceController {
             // 只有存在时才增加浏览次数
             resourceService.incrementViewCount(id);
             return Result.success(resource);
-        } catch (BusinessException e) {
-            return Result.error(e.getMessage());
         } catch (Exception e) {
             return Result.error("获取资源详情失败: " + e.getMessage());
         }

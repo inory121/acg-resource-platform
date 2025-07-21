@@ -1,12 +1,13 @@
 import axios from 'axios';
+import { ElMessage } from 'element-plus';
 
-const instance = axios.create({
-  baseURL: '/',
+const service = axios.create({
+  baseURL: '/api', // 设置统一的请求前缀
   timeout: 10000,
 });
 
 // 请求拦截器，自动携带 token
-instance.interceptors.request.use(
+service.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -19,16 +20,18 @@ instance.interceptors.request.use(
 );
 
 // 响应拦截器，可统一处理错误
-instance.interceptors.response.use(
+service.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // 未登录或token失效
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      // token失效或无权限，清除所有登录信息
       localStorage.removeItem('token');
+      localStorage.removeItem('userInfo');
+      localStorage.removeItem('userRole');
       window.location.href = '/login';
     }
     return Promise.reject(error);
   }
 );
 
-export default instance;
+export default service;

@@ -25,70 +25,79 @@
         <el-option v-for="category in categories" :key="category.id" :label="category.name" :value="category.id" />
       </el-select>
 
-      <el-button class="refresh-btn" @click="loadResources" type="info">
+      <el-button class="refresh-btn" @click="handleRefreshAndCheck" type="info">
         <i class="fas fa-refresh"></i>
-        刷新
+        刷新并检测状态
       </el-button>
     </div>
 
-    <!-- 资源列表 -->
-    <el-table :data="resources" border stripe style="width: 100%">
-      <el-table-column prop="id" sortable label="ID" width="70" />
-      <el-table-column prop="name" label="名称" />
-      <el-table-column label="分类">
+    <!-- 树形资源表格，懒加载模式 -->
+    <el-table
+      :data="tableData"
+      style="width: 100%"
+      :row-key="getRowKey"
+      border
+      lazy
+      :load="loadNode"
+      :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
+    >
+      <el-table-column prop="name" label="名称" min-width="180">
         <template #default="scope">
-          {{ getCategoryName(scope.row.categoryId) }}
+          <template v-if="scope.row.type === 'category'">
+            <i :class="scope.row.icon || 'fas fa-folder'" style="margin-right:8px;"></i>
+            <b>{{ scope.row.name }}</b>
+          </template>
+          <template v-else>
+            {{ scope.row.name }}
+          </template>
         </template>
       </el-table-column>
-      <el-table-column prop="description" label="描述" />
-      <el-table-column prop="viewCount" label="浏览量" width="80" sortable />
-      <el-table-column prop="sortOrder" label="排序/权重" width="90" sortable />
-      <el-table-column label="状态" width="80">
+      <el-table-column prop="description" label="描述" min-width="200" />
+      <el-table-column label="浏览量" width="80">
         <template #default="scope">
-          <span :class="['status', scope.row.status === 1 ? 'active' : 'inactive']">
-            {{ scope.row.status === 1 ? '正常' : '禁用' }}
-          </span>
+          <template v-if="scope.row.type === 'resource'">
+            {{ scope.row.viewCount }}
+          </template>
+        </template>
+      </el-table-column>
+      <el-table-column label="排序/权重" width="90">
+        <template #default="scope">
+          <template v-if="scope.row.type === 'resource'">
+            {{ scope.row.sortOrder }}
+          </template>
+        </template>
+      </el-table-column>
+      <el-table-column label="状态" width="100">
+        <template #default="scope">
+          <template v-if="scope.row.type === 'resource'">
+            <span :class="['status', scope.row.status === 1 ? 'active' : 'inactive']">
+              {{ scope.row.status === 1 ? '正常' : '无法访问' }}
+            </span>
+          </template>
         </template>
       </el-table-column>
       <el-table-column prop="createdTime" label="创建时间" width="120" sortable>
         <template #default="scope">
-          {{ formatDate(scope.row.createdTime) }}
+          <span v-if="scope.row.createdTime">{{ formatDate(scope.row.createdTime) }}</span>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="140">
         <template #default="scope">
-          <div class="action-buttons">
-            <el-button class="edit-btn" @click="editResource(scope.row)" type="primary" size="small">
-              <i class="fas fa-edit"></i>
-            </el-button>
-            <el-button class="delete-btn" @click="deleteResource(scope.row.id)" type="danger" size="small">
-              <i class="fas fa-trash"></i>
-            </el-button>
-          </div>
+          <template v-if="scope.row.type === 'resource'">
+            <div class="action-buttons">
+              <el-button class="edit-btn" @click="editResource(scope.row)" type="primary" size="small">
+                <i class="fas fa-edit"></i>
+              </el-button>
+              <el-button class="delete-btn" @click="deleteResource(scope.row.id)" type="danger" size="small">
+                <i class="fas fa-trash"></i>
+              </el-button>
+            </div>
+          </template>
         </template>
       </el-table-column>
     </el-table>
 
-    <!-- 分页 -->
-    <div class="pagination" style="justify-content: flex-start; gap: 20px;">
-      <div class="page-size-select">
-        <label style="margin-right: 6px; color: #555;">每页显示</label>
-        <el-select v-model="pageSize" @change="handlePageSizeChange" style="width: 80px;">
-          <el-option label="5" :value="5" />
-          <el-option label="10" :value="10" />
-          <el-option label="15" :value="15" />
-          <el-option label="20" :value="20" />
-        </el-select>
-        <span style="margin-left: 6px; color: #555;">条</span>
-      </div>
-      <el-button :disabled="currentPage === 1" @click="changePage(currentPage - 1)" size="small">
-        上一页
-      </el-button>
-      <span>{{ currentPage }} / {{ totalPages }}</span>
-      <el-button :disabled="currentPage === totalPages" @click="changePage(currentPage + 1)" size="small">
-        下一页
-      </el-button>
-    </div>
+    <!-- 分页组件已移除 -->
 
     <!-- 添加/编辑资源弹窗 -->
     <el-dialog :title="showEditModal ? '编辑资源' : '添加资源'" v-model="showAddEditDialog" width="500px" @close="closeModal">
@@ -97,10 +106,16 @@
           <el-input v-model="resourceForm.name" type="text" required />
         </el-form-item>
         <el-form-item label="分类">
-          <el-select v-model="resourceForm.categoryId" placeholder="请选择分类" required>
-            <el-option label="请选择分类" :value="null" />
-            <el-option v-for="category in categories" :key="category.id" :label="category.name" :value="category.id" />
-          </el-select>
+          <el-tree-select
+            v-model="resourceForm.categoryId"
+            :data="categoryTreeSelectData"
+            :render-after-expand="false"
+            :props="{ label: 'label', children: 'children', value: 'value' }"
+            placeholder="请选择分类"
+            style="width: 100%"
+            check-strictly
+            clearable
+          />
         </el-form-item>
         <el-form-item label="描述">
           <el-input v-model="resourceForm.description" type="textarea" rows="3" />
@@ -120,7 +135,7 @@
         <el-form-item label="状态">
           <el-select v-model="resourceForm.status" placeholder="正常">
             <el-option label="正常" :value="1" />
-            <el-option label="禁用" :value="0" />
+            <el-option label="无法访问" :value="0" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -135,9 +150,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { getResourceList, createResource, updateResource, deleteResource as deleteResourceApi } from '@/api/resource'
+import { getResourceList, createResource, updateResource, deleteResource as deleteResourceApi, checkAllResourcesStatus } from '@/api/resource'
 import { getCategories } from '@/api/category'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElNotification } from 'element-plus'
 
 interface Resource {
   id: number
@@ -151,20 +166,29 @@ interface Resource {
   status: number
   createdTime: string
   sortOrder: number
+  type?: 'resource'
 }
 
 interface Category {
   id: number
   name: string
+  description: string
+  icon: string
+  sortOrder: number
+  parentId: number
+  children?: (Category | Resource)[]
+  type?: 'category'
 }
 
 const resources = ref<Resource[]>([])
 const categories = ref<Category[]>([])
+const tableData = ref<(Category | Resource)[]>([])
 const searchKeyword = ref('')
 const selectedCategory = ref('')
-const currentPage = ref(1)
-const pageSize = ref(10)
-const totalPages = ref(1)
+// 移除分页相关的 ref
+// const currentPage = ref(1)
+// const pageSize = ref(10)
+// const totalPages = ref(1)
 const showAddModal = ref(false)
 const showEditModal = ref(false)
 const editingResource = ref<Resource | null>(null)
@@ -187,53 +211,144 @@ const showAddEditDialog = computed({
   }
 });
 
-const loadResources = async () => {
-  try {
-    const response = await getResourceList({
-      current: currentPage.value,
-      size: pageSize.value,
-      keyword: searchKeyword.value,
-      categoryId: selectedCategory.value ? Number(selectedCategory.value) : undefined
-    })
-    const res = response.data;
-    if (res.code === 200) {
-      resources.value = res.data.records;
-      // 修复分页异常：totalPages最小为1
-      let total = res.data.total;
-      total = Number(total) || 0;
-      totalPages.value = Math.max(1, Math.ceil(total / Number(pageSize.value)));
+// 恢复 buildCategoryResourceTree，并增强循环检测
+function buildCategoryResourceTree(categories: Category[], resources: Resource[]): (Category | Resource)[] {
+  const nodes = new Map<number, any>();
+  const roots: any[] = [];
+
+  // 1. Initialize nodes for all categories
+  categories.forEach(cat => {
+    nodes.set(cat.id, { ...cat, children: [], type: 'category' });
+  });
+
+  // 2. Build the category hierarchy
+  categories.forEach(cat => {
+    if (cat.parentId && cat.parentId !== 0 && nodes.has(cat.parentId)) {
+      const parentNode = nodes.get(cat.parentId);
+      const childNode = nodes.get(cat.id);
+      if (parentNode && childNode) {
+        parentNode.children.push(childNode);
+      }
     }
-  } catch (error) {
-    console.error('加载资源列表失败:', error)
-  }
+  });
+
+  // 3. Attach resources to their categories
+  resources.forEach(res => {
+    if (res.categoryId && nodes.has(res.categoryId)) {
+      const parentCategory = nodes.get(res.categoryId);
+      if (parentCategory) {
+        // Resources are always leaf nodes
+        parentCategory.children.push({ ...res, type: 'resource', hasChildren: false });
+      }
+    }
+  });
+  
+  // 4. Final pass to set hasChildren for categories and collect roots
+  nodes.forEach(node => {
+    if (node.type === 'category') {
+      node.hasChildren = node.children.length > 0;
+    }
+    if (!node.parentId || node.parentId === 0) {
+      roots.push(node);
+    }
+  });
+
+  return roots;
 }
 
-const loadCategories = async () => {
+const getRowKey = (row: Category | Resource) => {
+  // Combine type and id to ensure a unique key for both categories and resources
+  return `${row.type}-${row.id}`;
+};
+
+// 懒加载树表格：只加载顶级分类，点击展开时再加载子分类和资源
+const loadTopLevelData = async () => {
   try {
-    const response = await getCategories()
+    const response = await getCategories({ parentId: 0 });
     if (response.data.code === 200) {
-      categories.value = response.data.data
+      const topLevelCats = response.data.data;
+      tableData.value = topLevelCats.map((cat: Category) => ({
+        ...cat,
+        type: 'category',
+      }));
     }
   } catch (error) {
-    console.error('加载分类列表失败:', error)
+    console.error('Failed to load top level data:', error);
+  }
+};
+
+const loadNode = async (row: Category, treeNode: unknown, resolve: (data: (Category | Resource)[]) => void) => {
+  if (row.type === 'category') {
+    try {
+      const [subCategoriesRes, resourcesRes] = await Promise.all([
+        getCategories({ parentId: row.id }),
+        getResourceList({ categoryId: row.id })
+      ]);
+
+      const subCategories = (subCategoriesRes.data.data || []).map((cat: Category) => ({
+        ...cat,
+        type: 'category',
+        // hasChildren 字段由后端返回
+      }));
+
+      const resources = (resourcesRes.data.data || []).map((res: Resource) => ({
+        ...res,
+        type: 'resource',
+        hasChildren: false // 资源永远是叶子节点
+      }));
+
+      resolve([...subCategories, ...resources]);
+    } catch (error) {
+      console.error('Failed to load node:', error);
+      resolve([]);
+    }
+  }
+};
+
+const loadAllData = async () => {
+  try {
+    const [categoriesRes, resourcesRes] = await Promise.all([
+      getCategories(),
+      // admin/resources页面我们获取全量数据，不分页
+      getResourceList({ keyword: searchKeyword.value, categoryId: selectedCategory.value ? Number(selectedCategory.value) : undefined })
+    ]);
+
+    if (categoriesRes.data.code === 200 && resourcesRes.data.code === 200) {
+      categories.value = categoriesRes.data.data;
+      // 智能判断返回的是否是分页数据
+      const resourceData = resourcesRes.data.data;
+      resources.value = Array.isArray(resourceData) ? resourceData : resourceData.records || [];
+      // treeData.value = buildCategoryResourceTree(categories.value, resources.value); // This line is no longer needed
+    }
+  } catch (error) {
+    console.error('Failed to load data:', error);
+  }
+};
+
+
+const handleRefreshAndCheck = async () => {
+  try {
+    const res = await checkAllResourcesStatus()
+    ElNotification({
+      title: '成功',
+      message: res.data.message || '已发送检测指令，任务正在后台执行，请稍后查看结果。',
+      type: 'success',
+    });
+    loadAllData(); // Refresh data after check
+  } catch (error) {
+    ElNotification({
+      title: '失败',
+      message: '触发检测失败！',
+      type: 'error',
+    });
   }
 }
 
 const handleSearch = () => {
-  currentPage.value = 1
-  loadResources()
+  loadAllData();
 }
 
-const changePage = (page: number) => {
-  currentPage.value = page
-  loadResources()
-}
-
-const handlePageSizeChange = () => {
-  pageSize.value = Number(pageSize.value);
-  currentPage.value = 1;
-  loadResources();
-}
+// 移除 changePage 和 handlePageSizeChange 方法
 
 const getCategoryName = (categoryId: number) => {
   const category = categories.value.find(c => c.id === categoryId)
@@ -264,7 +379,7 @@ const deleteResource = async (id: number) => {
 
   try {
     await deleteResourceApi(id)
-    await loadResources()
+    await loadAllData()
   } catch (error) {
     console.error('删除资源失败:', error)
   }
@@ -285,7 +400,7 @@ const submitResource = async () => {
     }
 
     closeModal()
-    await loadResources()
+    await loadAllData()
   } catch (error) {
     console.error('保存资源失败:', error)
   }
@@ -307,9 +422,29 @@ const closeModal = () => {
   }
 }
 
+// 构建 el-tree-select 需要的数据结构
+const categoryTreeSelectData = computed(() => {
+  const map = new Map<number, any>()
+  const roots: any[] = []
+  categories.value.forEach(cat => {
+    map.set(cat.id, {
+      value: cat.id,
+      label: cat.name,
+      children: []
+    })
+  })
+  categories.value.forEach(cat => {
+    if (cat.parentId && map.has(cat.parentId)) {
+      map.get(cat.parentId).children.push(map.get(cat.id))
+    } else {
+      roots.push(map.get(cat.id))
+    }
+  })
+  return roots
+})
+
 onMounted(() => {
-  loadResources()
-  loadCategories()
+  loadTopLevelData();
 })
 </script>
 

@@ -1,4 +1,4 @@
-import axios from './index';
+import request from './index';
 
 export interface LoginParams {
   username: string;
@@ -26,21 +26,21 @@ export interface UserProfile {
 }
 
 export function login(data: LoginParams) {
-  return axios.post('/api/auth/login', data);
+  return request.post('/auth/login', data);
 }
 
 export function register(data: RegisterParams) {
-  return axios.post('/api/auth/register', data);
+  return request.post('/auth/register', data);
 }
 
 export function getUserProfile() {
-  return axios.get('/api/user/profile');
+  return request.get('/user/profile');
 }
 
 export function updateUserProfile(data: Partial<UserProfile>) {
-  return axios.put('/api/user/profile', data);
+  return request.put('/user/profile', data);
 }
 
 export function updatePassword(data: { oldPassword: string; newPassword: string; confirmPassword: string }) {
-  return axios.put('/api/user/password', data);
+  return request.put('/user/password', data);
 }

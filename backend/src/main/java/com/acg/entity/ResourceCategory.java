@@ -83,4 +83,7 @@ public class ResourceCategory {
     @TableLogic
     @TableField("deleted")
     private Integer deleted;
+
+    @TableField(exist = false)
+    private boolean hasChildren;
 } 

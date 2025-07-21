@@ -1,7 +1,7 @@
 package com.acg.config;
 
 import com.acg.entity.User;
-import com.acg.mapper.UserMapper;
+import com.acg.service.UserService;
 import com.acg.util.JwtUtil;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -25,7 +25,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUtil jwtUtil;
     @Autowired
-    private UserMapper userMapper;
+    private UserService userService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -39,7 +39,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String role = claims.get("role", String.class);
                 
                 if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    User user = userMapper.findByUsername(username);
+                    User user = userService.getUserInfoByUsername(username);
                     if (user != null) {
                         // 创建权限列表
                         List<SimpleGrantedAuthority> authorities = Collections.singletonList(

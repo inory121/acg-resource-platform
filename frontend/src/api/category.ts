@@ -1,21 +1,25 @@
-import axios from './index';
+import request from './index';
 
-export function getCategories() {
-  return axios.get('/api/categories');
+export function getCategories(params?: { parentId: number }) {
+  return request({
+    url: '/categories',
+    method: 'get',
+    params
+  })
 }
 
 export function getChildrenCategories(parentId: number = 0) {
-  return axios.get('/api/categories/children', { params: { parentId } });
+  return request.get('/categories/children', { params: { parentId } });
 }
 
 export function createCategory(data: any) {
-  return axios.post('/api/categories', data);
+  return request.post('/categories', data);
 }
 
 export function updateCategory(id: number, data: any) {
-  return axios.put(`/api/categories/${id}`, data);
+  return request.put(`/categories/${id}`, data);
 }
 
 export function deleteCategory(id: number) {
-  return axios.delete(`/api/categories/${id}`);
+  return request.delete(`/categories/${id}`);
 }

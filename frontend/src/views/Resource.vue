@@ -1,10 +1,16 @@
 <template>
   <div class="main-content" v-if="resource">
-    <el-tabs v-model="activeMainCategory" type="card" class="main-category-tabs" @tab-click="onMainCategorySelect">
+    <el-tabs :model-value="activeMainCategory" type="card" class="main-category-tabs" @tab-click="onMainCategorySelect">
       <el-tab-pane v-for="cat in mainCategories" :key="cat.id" :label="cat.name" :name="cat.id" />
     </el-tabs>
     <div class="container">
-      <CategorySidebar :active-category="activeCategory" :categories="subCategories" @select="onCategorySelect" />
+      <CategorySidebar
+        :mainCategoryId="activeMainCategory"
+        :active-category="activeCategory"
+        :categories="subCategories"
+        :hideUserInfo="true"
+        @select="onCategorySelect"
+      />
       <main class="content">
         <el-card>
           <div class="resource-header">
@@ -13,9 +19,8 @@
               <h2>{{ resource.name }}</h2>
               <p>{{ resource.description }}</p>
               <div class="resource-meta">
-                <span>分类：{{ resource.categoryName }}</span>
                 <span>浏览：{{ resource.viewCount }}</span>
-                <span>点赞：{{ resource.likeCount }}</span>
+                <span style="margin-left: 10px;">点赞：{{ resource.likeCount }}</span>
                 <span v-if="resource.tags && resource.tags.length > 0" class="resource-tags">
                   <el-tag
                     v-for="tag in (resource.tags.split(',').filter((t: string) => t.trim()))"
@@ -40,7 +45,7 @@
   <el-empty v-else description="资源不存在" />
 </template>
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getResourceById } from '@/api/resource';
 import CategorySidebar from '@/components/CategorySidebar.vue';
@@ -49,30 +54,47 @@ import { useCategoryStore } from '@/store/category';
 import { storeToRefs } from 'pinia';
 import type { CategoryItem } from '@/store/category';
 
+export interface Resource {
+  id: number;
+  name: string;
+  description: string;
+  url: string;
+  categoryId: number;
+  viewCount: number;
+  likeCount: number;
+  tags: string;
+  createdTime: string; // Changed from createdAt
+  updatedTime: string; // Changed from updatedAt
+}
+
 const route = useRoute();
 const router = useRouter();
-const resource = ref<any>(null);
+const resource = ref<Resource | null>(null);
 
 const categoryStore = useCategoryStore();
 const { categories } = storeToRefs(categoryStore);
+categoryStore.fetchCategories(); // Ensure categories are being fetched
 
 const mainCategories = computed(() => categories.value.filter((c: CategoryItem) => c.parentId === 0));
-const activeMainCategory = ref(0);
-const subCategories = computed(() => categories.value.filter((c: CategoryItem) => c.parentId === activeMainCategory.value));
-const activeCategory = ref(0);
 
-async function fetchResource() {
+// Convert ref to computed to solve race condition
+const currentCategory = computed(() => {
+    if (!resource.value || !categories.value.length) return null;
+    return categories.value.find((c: CategoryItem) => c.id === resource.value?.categoryId) || null;
+});
+
+const activeCategory = computed(() => currentCategory.value?.id || 0);
+const activeMainCategory = computed(() => currentCategory.value?.parentId || 0);
+
+const subCategories = computed(() => {
+    if (!activeMainCategory.value) return [];
+    return categories.value.filter((c: CategoryItem) => c.parentId === activeMainCategory.value);
+});
+
+async function fetchResource(id: number) {
   try {
-    const res = await getResourceById(Number(route.params.id));
+    const res = await getResourceById(id);
     resource.value = res.data.data;
-    // 资源加载后，自动高亮主分区和子分区
-    if (resource.value && categories.value.length) {
-      const cat = categories.value.find((c: CategoryItem) => c.id === resource.value.categoryId);
-      if (cat) {
-        activeCategory.value = cat.id;
-        activeMainCategory.value = cat.parentId;
-      }
-    }
   } catch {
     resource.value = null;
   }
@@ -90,11 +112,12 @@ function getFaviconUrl(url?: string) {
 
 function onMainCategorySelect(tab: { paneName: string | number }) {
   const id = Number(tab.paneName);
-  activeMainCategory.value = id;
-  // 跳转到该主分区下第一个子分区的分类页
-  const firstSub = categories.value.find((c: CategoryItem) => c.parentId === id);
-  if (firstSub) {
-    router.push(`/category/${firstSub.id}`);
+  // activeMainCategory.value = id; // This is now a computed property and cannot be set directly.
+  
+  // Instead of setting, we navigate to the first sub-category of the selected main category.
+  const firstSubCategory = categories.value.find((c: CategoryItem) => c.parentId === id);
+  if (firstSubCategory) {
+    router.push(`/category/${firstSubCategory.id}`);
   }
 }
 function onCategorySelect(id: string) {
@@ -108,15 +131,21 @@ function openResourceUrl() {
   }
 }
 
-onMounted(async () => {
-  await categoryStore.fetchCategories();
-  await fetchResource();
-});
-// 监听路由变化，切换资源时自动刷新
-watch(() => route.params.id, async (newId) => {
-  if (newId) {
-    await fetchResource();
-  }
+watch(
+  () => route.params.id,
+  (newId) => {
+    if (newId) {
+      fetchResource(Number(newId));
+    }
+  },
+  { immediate: true }
+);
+
+onMounted(() => {
+  // 移除这里的调用，因为 watch immediate: true 会在初始化时执行
+  // if (route.params.id) {
+  //   fetchResource(Number(route.params.id));
+  // }
 });
 </script>
 <style scoped>

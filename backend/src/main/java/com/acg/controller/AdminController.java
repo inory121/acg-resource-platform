@@ -2,8 +2,8 @@ package com.acg.controller;
 
 import com.acg.common.Result;
 import com.acg.entity.User;
-import com.acg.service.UserService;
 import com.acg.service.ResourceService;
+import com.acg.service.UserService;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
@@ -92,6 +92,21 @@ public class AdminController {
             return Result.success();
         } catch (Exception e) {
             return Result.error("删除用户失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 手动触发资源状态检测
+     */
+    @PostMapping("/resources/check-status")
+    @Operation(summary = "手动触发资源状态检测", description = "立即检测所有资源的可用性")
+    public Result<String> triggerResourceStatusCheck() {
+        try {
+            // 异步执行，避免长时间阻塞请求
+            new Thread(() -> resourceService.autoCheckResourceStatus()).start();
+            return Result.success("已开始后台检测，请稍后刷新查看结果。");
+        } catch (Exception e) {
+            return Result.error("触发检测失败: " + e.getMessage());
         }
     }
 

@@ -6,19 +6,21 @@
     </div>
     <el-empty v-if="loading && resources.length === 0" description="加载中..." />
     <el-empty v-else-if="!loading && resources.length === 0" description="暂无相关资源" />
-    <div v-else class="resource-list">
-      <div v-for="res in resources" :key="res.id" class="resource-item" @click="goDetail(res.id)">
-        <img :src="getFaviconUrl(res.url)" class="resource-icon" />
-        <div class="resource-info">
-          <h4>{{ res.name }}</h4>
-          <p>{{ res.description }}</p>
+    <div v-else class="results-container">
+      <div class="resource-list">
+        <div v-for="res in resources" :key="res.id" class="resource-item" @click="goDetail(res.id)">
+          <img :src="getFaviconUrl(res.url)" class="resource-icon" />
+          <div class="resource-info">
+            <h4>{{ res.name }}</h4>
+            <p>{{ res.description }}</p>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getResourceList } from '@/api/resource';
 
@@ -51,7 +53,11 @@ async function fetchResources() {
   }
   try {
     const res = await getResourceList({ keyword: q });
-    resources.value = res.data.data.records || [];
+    if (res.data && res.data.data) {
+      resources.value = Array.isArray(res.data.data) ? res.data.data : res.data.data.records || [];
+    } else {
+      resources.value = [];
+    }
   } catch {
     resources.value = [];
   }
@@ -74,6 +80,12 @@ watch(() => route.query.q, fetchResources, { immediate: true });
 .search-keyword span {
   color: #1976d2;
   font-weight: bold;
+}
+.results-container {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 .resource-list {
   display: grid;

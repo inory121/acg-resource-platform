@@ -85,6 +85,11 @@ public interface ResourceService {
      */
     boolean deleteCategory(Long id);
     
+    /**
+     * 获取带子分类状态的分类列表
+     */
+    List<ResourceCategory> getCategoriesWithChildrenStatus(Long parentId);
+    
     // 管理员功能方法
     
     /**
@@ -101,4 +106,14 @@ public interface ResourceService {
      * 获取总浏览量
      */
     Long getTotalViewCount();
+    
+    /**
+     * 自动（或手动触发）检测所有资源的可用性
+     */
+    void autoCheckResourceStatus();
+
+    /**
+     * 获取资源列表（不分页）
+     */
+    List<Resource> getResourceList(String keyword, Long categoryId);
 }

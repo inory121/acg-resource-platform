@@ -116,17 +116,11 @@ const totalPages = ref(1)
 
 const loadUsers = async () => {
   try {
-    const response = await getUserList({
-      current: currentPage.value,
-      size: pageSize.value,
-      keyword: searchKeyword.value || undefined,
-      role: selectedRole.value || undefined,
-      status: selectedStatus.value ? Number(selectedStatus.value) : undefined
-    })
-    
-    if (response.data.code === 200) {
-      users.value = response.data.data.records
-      totalPages.value = Math.ceil(response.data.data.total / pageSize.value)
+    const params = { current: currentPage.value, size: pageSize.value, keyword: searchKeyword.value, role: selectedRole.value, status: selectedStatus.value ? Number(selectedStatus.value) : undefined };
+    const response = await getUserList(params)
+    if (response.data.code === 200 && response.data.data) {
+      users.value = response.data.data.records || []
+      totalPages.value = response.data.data.pages || 1
     }
   } catch (error) {
     console.error('加载用户列表失败:', error)

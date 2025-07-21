@@ -8,8 +8,13 @@ import com.acg.entity.User;
 import com.acg.mapper.UserMapper;
 import com.acg.service.UserService;
 import com.acg.util.JwtUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,10 +23,8 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.Map;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 用户服务实现类
@@ -54,8 +57,8 @@ public class UserServiceImpl implements UserService {
         
         // 创建用户
         User user = new User();
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
+        BeanUtils.copyProperties(request, user);
+        
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setNickname(request.getNickname() != null ? request.getNickname() : request.getUsername());
         user.setRole("USER");
@@ -69,7 +72,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public String login(String username, String password) {
         // 根据用户名查询用户
-        User user = userMapper.findByUsername(username);
+        User user = getUserByUsername(username);
         if (user == null) {
             throw new BusinessException("用户名或密码错误");
         }
@@ -148,12 +151,7 @@ public class UserServiceImpl implements UserService {
         User user = getUserInfo(userId);
         
         // 更新用户信息
-        if (request.getNickname() != null && !request.getNickname().trim().isEmpty()) {
-            user.setNickname(request.getNickname().trim());
-        }
-        if (request.getAvatar() != null) {
-            user.setAvatar(request.getAvatar());
-        }
+        BeanUtils.copyProperties(request, user, "id", "username", "email", "password", "role", "status", "createdTime");
         
         user.setUpdatedTime(LocalDateTime.now());
         userMapper.updateById(user);
@@ -204,7 +202,7 @@ public class UserServiceImpl implements UserService {
     
     @Override
     public User getUserInfoByUsername(String username) {
-        User user = userMapper.findByUsername(username);
+        User user = getUserByUsername(username);
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
@@ -213,19 +211,52 @@ public class UserServiceImpl implements UserService {
     
     @Override
     public boolean isUsernameExists(String username) {
-        return userMapper.countByUsername(username) > 0;
+        return userMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<User>()
+                .eq("username", username)
+                .eq("deleted", 0)) > 0;
     }
     
     @Override
     public boolean isEmailExists(String email) {
-        return userMapper.countByEmail(email) > 0;
+        return userMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<User>()
+                .eq("email", email)
+                .eq("deleted", 0)) > 0;
+    }
+    
+    /**
+     * 通过用户名查找未删除用户（MyBatis-Plus Wrapper 封装）
+     */
+    private User getUserByUsername(String username) {
+        return userMapper.selectOne(new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<User>()
+            .eq("username", username)
+            .eq("deleted", 0));
     }
     
     // 管理员功能方法实现
     
     @Override
     public IPage<User> getUserPage(Page<User> page, String keyword, String role, Integer status) {
-        return userMapper.selectUserPage(page, keyword, role, status);
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("deleted", 0);
+
+        if (StringUtils.isNotBlank(keyword)) {
+            queryWrapper.and(wrapper ->
+                    wrapper.like("username", keyword)
+                            .or().like("email", keyword)
+                            .or().like("nickname", keyword));
+        }
+
+        if (StringUtils.isNotBlank(role)) {
+            queryWrapper.eq("role", role);
+        }
+
+        if (status != null) {
+            queryWrapper.eq("status", status);
+        }
+
+        queryWrapper.orderByDesc("created_time");
+
+        return userMapper.selectPage(page, queryWrapper);
     }
     
     @Override
@@ -267,6 +298,9 @@ public class UserServiceImpl implements UserService {
     
     @Override
     public List<User> getRecentUsers(int limit) {
-        return userMapper.selectRecentUsers(limit);
+        return userMapper.selectList(new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<User>()
+            .eq("deleted", 0)
+            .orderByDesc("created_time")
+            .last("LIMIT " + limit));
     }
 }
