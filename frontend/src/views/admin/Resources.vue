@@ -42,6 +42,7 @@
       </el-table-column>
       <el-table-column prop="description" label="描述" />
       <el-table-column prop="viewCount" label="浏览量" width="80" sortable />
+      <el-table-column prop="sortOrder" label="排序/权重" width="90" sortable />
       <el-table-column label="状态" width="80">
         <template #default="scope">
           <span :class="['status', scope.row.status === 1 ? 'active' : 'inactive']">
@@ -96,8 +97,8 @@
           <el-input v-model="resourceForm.name" type="text" required />
         </el-form-item>
         <el-form-item label="分类">
-          <el-select v-model="resourceForm.categoryId" required>
-            <el-option label="请选择分类" value="" />
+          <el-select v-model="resourceForm.categoryId" placeholder="请选择分类" required>
+            <el-option label="请选择分类" :value="null" />
             <el-option v-for="category in categories" :key="category.id" :label="category.name" :value="category.id" />
           </el-select>
         </el-form-item>
@@ -113,10 +114,13 @@
         <el-form-item label="标签">
           <el-input v-model="resourceForm.tags" type="text" placeholder="用逗号分隔多个标签" />
         </el-form-item>
+        <el-form-item label="排序/权重">
+          <el-input v-model.number="resourceForm.sortOrder" type="number" min="0" placeholder="数值越大越靠前" />
+        </el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="resourceForm.status" @change="(val: any) => resourceForm.status = Number(val)">
-            <el-option :value="1">正常</el-option>
-            <el-option :value="0">禁用</el-option>
+          <el-select v-model="resourceForm.status" placeholder="正常">
+            <el-option label="正常" :value="1" />
+            <el-option label="禁用" :value="0" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -133,18 +137,20 @@
 import { ref, onMounted, computed } from 'vue'
 import { getResourceList, createResource, updateResource, deleteResource as deleteResourceApi } from '@/api/resource'
 import { getCategories } from '@/api/category'
+import { ElMessage } from 'element-plus'
 
 interface Resource {
   id: number
   name: string
   description: string
-  categoryId: number
+  categoryId: number | null
   url: string
   icon: string
   tags: string
   viewCount: number
   status: number
   createdTime: string
+  sortOrder: number
 }
 
 interface Category {
@@ -165,12 +171,13 @@ const editingResource = ref<Resource | null>(null)
 
 const resourceForm = ref({
   name: '',
-  categoryId: 0,
+  categoryId: null as number | null,
   description: '',
   url: '',
   icon: '',
   tags: '',
-  status: 1
+  status: 1,
+  sortOrder: 0
 })
 
 const showAddEditDialog = computed({
@@ -241,12 +248,13 @@ const editResource = (resource: Resource) => {
   editingResource.value = resource
   resourceForm.value = {
     name: resource.name,
-    categoryId: Number(resource.categoryId),
+    categoryId: resource.categoryId ?? null,
     description: resource.description,
     url: resource.url,
     icon: resource.icon,
     tags: resource.tags,
-    status: resource.status
+    status: resource.status,
+    sortOrder: resource.sortOrder ?? 0
   }
   showEditModal.value = true
 }
@@ -264,10 +272,16 @@ const deleteResource = async (id: number) => {
 
 const submitResource = async () => {
   try {
+    // categoryId 必须为 number，未选时阻止提交
+    if (resourceForm.value.categoryId === null) {
+      ElMessage.error('请选择分类');
+      return;
+    }
+    const submitData = { ...resourceForm.value, categoryId: resourceForm.value.categoryId };
     if (showEditModal.value && editingResource.value) {
-      await updateResource(editingResource.value.id, resourceForm.value)
+      await updateResource(editingResource.value.id, submitData)
     } else {
-      await createResource(resourceForm.value)
+      await createResource(submitData)
     }
 
     closeModal()
@@ -283,12 +297,13 @@ const closeModal = () => {
   editingResource.value = null
   resourceForm.value = {
     name: '',
-    categoryId: 0,
+    categoryId: null,
     description: '',
     url: '',
     icon: '',
     tags: '',
-    status: 1
+    status: 1,
+    sortOrder: 0
   }
 }
 

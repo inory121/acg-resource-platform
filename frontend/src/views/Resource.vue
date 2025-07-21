@@ -1,6 +1,8 @@
 <template>
   <div class="main-content" v-if="resource">
-    <MainCategoryTabs :main-categories="mainCategories" :active-main-category="activeMainCategory" @select="onMainCategorySelect" />
+    <el-tabs v-model="activeMainCategory" type="card" class="main-category-tabs" @tab-click="onMainCategorySelect">
+      <el-tab-pane v-for="cat in mainCategories" :key="cat.id" :label="cat.name" :name="cat.id" />
+    </el-tabs>
     <div class="container">
       <CategorySidebar :active-category="activeCategory" :categories="subCategories" @select="onCategorySelect" />
       <main class="content">
@@ -14,6 +16,16 @@
                 <span>分类：{{ resource.categoryName }}</span>
                 <span>浏览：{{ resource.viewCount }}</span>
                 <span>点赞：{{ resource.likeCount }}</span>
+                <span v-if="resource.tags && resource.tags.length > 0" class="resource-tags">
+                  <el-tag
+                    v-for="tag in (resource.tags.split(',').filter((t: string) => t.trim()))"
+                    :key="tag"
+                    type="info"
+                    class="tag-item"
+                  >
+                    {{ tag.trim() }}
+                  </el-tag>
+                </span>
               </div>
             </div>
           </div>
@@ -76,7 +88,8 @@ function getFaviconUrl(url?: string) {
   }
 }
 
-function onMainCategorySelect(id: number) {
+function onMainCategorySelect(tab: { paneName: string | number }) {
+  const id = Number(tab.paneName);
   activeMainCategory.value = id;
   // 跳转到该主分区下第一个子分区的分类页
   const firstSub = categories.value.find((c: CategoryItem) => c.parentId === id);
@@ -114,34 +127,43 @@ watch(() => route.params.id, async (newId) => {
 }
 .main-category-tabs {
   display: flex;
-  gap: 20px;
-  padding: 16px 0 20px 0;
+  gap: 24px;
+  padding-top: 15px;
   background: transparent;
-  margin-bottom: 12px;
 }
-.main-tab {
+:deep(.el-tabs__item) {
+  font-size: 18px !important;
+  font-weight: bold;
+  letter-spacing: 1px;
+  height: 60px;
+  line-height: 60px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 28px;
-  border-radius: 24px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 17px;
-  color: #555;
-  background: transparent;
-  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
-  position: relative;
-  min-height: 40px;
-  line-height: 1;
+  justify-content: center;
 }
-.main-tab.active, .main-tab:hover {
-  background: #eaf3fb;
-  color: #1976d2;
-  box-shadow: 0 2px 8px #e3e8f7;
+:deep(.el-tabs) {
+    --el-tabs-header-height: 60px;
+    display: flex;
 }
-.main-tab i {
-  font-size: 20px;
+:deep(.dark .el-tabs--card .el-tabs__item) {
+  background: #181a20 !important;
+  color: #bbb !important;
+  border: 1.5px solid #333 !important;
+  border-bottom: none !important;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+}
+:deep(.dark .el-tabs--card .el-tabs__item.is-active) {
+  background: #232b36 !important;
+  color: #409EFF !important;
+  border-bottom: 2.5px solid #232b36 !important;
+  font-weight: bold;
+}
+:deep(.dark .el-tabs--card .el-tabs__item:hover) {
+  background: #23272e !important;
+  color: #fff !important;
+}
+:deep(.dark .el-tabs--card > .el-tabs__header) {
+  border-bottom: 2px solid #333 !important;
 }
 .container {
   display: flex;
@@ -206,6 +228,19 @@ watch(() => route.params.id, async (newId) => {
 }
 .resource-url {
   margin-top: 24px;
+}
+.resource-tags {
+  margin-left: 16px;
+  display: inline-flex;
+  gap: 8px;
+}
+.tag-item {
+  font-size: 12px;
+  padding: 0 8px;
+  border-radius: 6px;
+  background: #f4f8fb;
+  color: #409EFF;
+  border: none;
 }
 @media (max-width: 768px) {
   .container {

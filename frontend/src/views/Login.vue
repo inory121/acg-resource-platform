@@ -48,7 +48,7 @@ async function onLogin() {
       ElMessage.success('登录成功');
       router.push('/');
     } catch (e: any) {
-      ElMessage.error(e?.response?.data?.message || '登录失败');
+      ElMessage.error(e?.message || '登录失败');
     } finally {
       loading.value = false;
     }
@@ -62,20 +62,31 @@ function goRegister() {
 
 <style scoped>
 .login-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100vh;
   background: var(--el-bg-color);
+  overflow: hidden;
 }
+body {
+  overflow: hidden;
+}
+
 .login-card {
   width: 380px;
   padding: 32px 24px 16px 24px;
 }
+
 .title {
   text-align: center;
   margin-bottom: 24px;
 }
+
 :deep(.el-form-item__label) {
   font-size: 15px;
   white-space: nowrap;

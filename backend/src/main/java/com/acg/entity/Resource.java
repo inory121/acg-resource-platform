@@ -78,6 +78,12 @@ public class Resource {
     private Integer status;
 
     /**
+     * 排序权重，越大越靠前
+     */
+    @TableField("sort_order")
+    private Integer sortOrder;
+
+    /**
      * 创建者ID
      */
     @TableField("created_by")

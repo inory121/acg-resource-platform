@@ -9,6 +9,9 @@ export const useUserStore = defineStore('user', () => {
 
   async function loginAction(data: { username: string; password: string }) {
     const res = await login(data);
+    if (res.data.code !== 200) {
+      throw new Error(res.data.message || '登录失败');
+    }
     token.value = res.data.data.token;
     localStorage.setItem('token', token.value!);
     userInfo.value = res.data.data.user;

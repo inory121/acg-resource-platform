@@ -24,4 +24,7 @@ public class ResourceDTO {
     private Long categoryId;
     
     private String tags;
+
+    // 排序权重，越大越靠前
+    private Integer sortOrder;
 }

@@ -143,7 +143,7 @@ const handleUserCommand = (command: string) => {
       router.push('/user?tab=history')
       break
     case 'admin':
-      router.push('/admin')
+      router.push('/admin/dashboard')
       break
     case 'logout':
       userStore.logout()

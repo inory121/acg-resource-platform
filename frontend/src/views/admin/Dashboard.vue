@@ -21,7 +21,7 @@
           <p>图表区域 - 需要集成图表库</p>
         </div>
       </div>
-      
+
       <div class="chart-card">
         <h3>分类资源分布</h3>
         <div class="chart-placeholder">
@@ -49,15 +49,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { getDashboardStats, type DashboardStats } from '@/api/admin'
-
-interface Activity {
-  id: number
-  text: string
-  time: string
-  icon: string
-}
 
 const stats = ref<DashboardStats>({
   totalResources: 0,
@@ -67,33 +60,6 @@ const stats = ref<DashboardStats>({
   recentUsers: [],
   hotResources: []
 })
-
-const recentActivities = ref<Activity[]>([
-  {
-    id: 1,
-    text: '新用户 "张三" 注册了账号',
-    time: '2分钟前',
-    icon: 'fas fa-user-plus'
-  },
-  {
-    id: 2,
-    text: '用户 "李四" 上传了新资源 "Vue3教程"',
-    time: '5分钟前',
-    icon: 'fas fa-upload'
-  },
-  {
-    id: 3,
-    text: '管理员创建了新分类 "前端开发"',
-    time: '10分钟前',
-    icon: 'fas fa-folder-plus'
-  },
-  {
-    id: 4,
-    text: '用户 "王五" 下载了资源 "React实战"',
-    time: '15分钟前',
-    icon: 'fas fa-download'
-  }
-])
 
 const loadStats = async () => {
   try {
@@ -110,12 +76,19 @@ onMounted(() => {
   loadStats()
 })
 
-const statList = [
+// 确保 statList 正确引用 stats.value 的值
+const statList = computed(() => [
   { icon: 'fas fa-file-alt', value: stats.value.totalResources, label: '总资源数' },
   { icon: 'fas fa-users', value: stats.value.totalUsers, label: '总用户数' },
   { icon: 'fas fa-folder', value: stats.value.totalCategories, label: '总分类数' },
   { icon: 'fas fa-eye', value: stats.value.totalViews, label: '总浏览量' }
-]
+])
+
+const recentActivities = ref([
+  { id: 1, icon: 'fas fa-upload', text: '用户A 上传了新资源', time: '1小时前' },
+  { id: 2, icon: 'fas fa-user-plus', text: '新用户B 注册', time: '2小时前' },
+  { id: 3, icon: 'fas fa-edit', text: '用户C 修改了资源信息', time: '3小时前' }
+])
 </script>
 
 <style scoped>
@@ -134,21 +107,31 @@ const statList = [
   background: white;
   border-radius: 8px;
   padding: 20px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  height: 200px;
+}
+
+:deep(.el-card__body) {
   display: flex;
   align-items: center;
-  gap: 15px;
+  flex-direction: column;
 }
 
 .stat-icon {
-  width: 50px;
-  height: 50px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 28px;
   color: white;
+  margin-bottom: 8px;
 }
 
 .stat-card:nth-child(1) .stat-icon {
@@ -167,17 +150,28 @@ const statList = [
   background: #27ae60;
 }
 
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  width: 100%;
+}
+
 .stat-content h3 {
   margin: 0;
-  font-size: 28px;
-  font-weight: 600;
+  font-size: 32px;
+  font-weight: 700;
   color: #2c3e50;
+  text-align: center;
 }
 
 .stat-content p {
-  margin: 5px 0 0 0;
+  margin: 8px 0 0 0;
   color: #7f8c8d;
-  font-size: 14px;
+  font-size: 15px;
+  text-align: center;
 }
 
 .charts-grid {
@@ -191,7 +185,7 @@ const statList = [
   background: white;
   border-radius: 8px;
   padding: 20px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .chart-card h3 {
@@ -216,7 +210,7 @@ const statList = [
   background: white;
   border-radius: 8px;
   padding: 20px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .recent-activities h3 {
@@ -272,9 +266,9 @@ const statList = [
   .stats-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .charts-grid {
     grid-template-columns: 1fr;
   }
 }
-</style> 
+</style>

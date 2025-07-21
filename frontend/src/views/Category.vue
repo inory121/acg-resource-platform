@@ -1,23 +1,26 @@
 <template>
   <div class="main-content">
-    <MainCategoryTabs :main-categories="mainCategories" :active-main-category="activeMainCategory" @select="onMainCategorySelect" />
+    <el-tabs v-model="activeMainCategory" type="card" class="main-category-tabs" @tab-click="onMainCategorySelect">
+      <el-tab-pane v-for="cat in mainCategories" :key="cat.id" :label="cat.name" :name="cat.id" />
+    </el-tabs>
     <div class="container">
       <!-- 左侧导航：只显示当前主分区下的子分区 -->
-      <CategorySidebar :active-category="activeCategory" :categories="subCategories" :collapsed="sidebarCollapsed" @toggle="handleSidebarToggle" @select="onCategorySelect" />
+      <CategorySidebar :active-category="activeCategory" :categories="subCategories" :collapsed="sidebarCollapsed"
+        @toggle="handleSidebarToggle" @select="onCategorySelect" />
       <!-- 右侧内容 -->
       <main class="content" :class="{ 'content-collapsed': sidebarCollapsed }">
         <el-card class="resource-list-card">
           <h3>分类资源</h3>
           <el-empty v-if="resources.length === 0" description="暂无资源" />
           <div v-else class="resource-list">
-            <div v-for="res in resources" :key="res.id" class="resource-item">
-              <el-button text @click="goDetail(res.id)">
-                <img :src="getFaviconUrl(res.url)" class="resource-icon" />
-                <div class="resource-info">
-                  <h4>{{ res.name }}</h4>
-                  <p>{{ res.description }}</p>
-                </div>
-              </el-button>
+            <div v-for="res in resources" :key="res.id" class="resource-card" @click="goDetail(res.id)">
+              <div class="resource-icon">
+                <img :src="getFaviconUrl(res.url)" :alt="res.name" />
+              </div>
+              <div class="resource-info">
+                <h3>{{ res.name }}</h3>
+                <p>{{ res.description }}</p>
+              </div>
             </div>
           </div>
         </el-card>
@@ -34,6 +37,7 @@ import MainCategoryTabs from '@/components/MainCategoryTabs.vue'
 import type { CategoryItem } from '@/store/category'
 import { storeToRefs } from 'pinia'
 import { useCategoryStore } from '@/store/category'
+import { ElTabs, ElTabPane, type TabsPaneContext } from 'element-plus';
 
 const router = useRouter();
 const route = useRoute();
@@ -63,11 +67,12 @@ function handleResize() {
 }
 
 // 切换主分区
-function onMainCategorySelect(id: number) {
-  activeMainCategory.value = id
+function onMainCategorySelect(tab: TabsPaneContext) {
+  const id = Number(tab.paneName);
+  activeMainCategory.value = id;
   // 自动选中第一个子分区
   if (subCategories.value.length) {
-    onCategorySelect(String(subCategories.value[0].id))
+    onCategorySelect(String(subCategories.value[0].id));
   }
 }
 // 切换子分区
@@ -128,58 +133,67 @@ function getFaviconUrl(url?: string) {
 
 .main-category-tabs {
   display: flex;
-  gap: 20px;
-  padding: 16px 0 ;
+  gap: 24px;
+  padding-top: 15px;
   background: transparent;
-  margin-bottom: 16px;
 }
+
 .main-tab {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 28px;
-  border-radius: 24px;
+  gap: 12px;
+  padding: 16px 48px;
+  border-radius: 32px;
   cursor: pointer;
-  font-weight: 600;
-  font-size: 17px;
+  font-weight: 800;
+  font-size: 22px;
   color: #555;
-  background: transparent;
+  background: #f6faff;
   transition: background 0.18s, color 0.18s, box-shadow 0.18s;
   position: relative;
-  min-height: 40px;
+  min-height: 56px;
   line-height: 1;
-}
-.main-tab.active, .main-tab:hover {
-  background: #eaf3fb;
-  color: #1976d2;
   box-shadow: 0 2px 8px #e3e8f7;
 }
+
+.main-tab.active,
+.main-tab:hover {
+  background: linear-gradient(90deg, #409EFF 0%, #6ec6ff 100%);
+  color: #fff;
+  box-shadow: 0 6px 20px #b3e5fc;
+}
+
 .main-tab i {
-  font-size: 20px;
+  font-size: 26px;
 }
 
 .container {
   display: flex;
   gap: 20px;
 }
+
 .sidebar {
   width: 250px;
   flex-shrink: 0;
 }
+
 .category-nav {
   background-color: var(--bg-color);
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 }
+
 .category-nav h3 {
   margin-bottom: 15px;
 
   color: var(--text-color-primary);
 }
+
 .category-menu {
   border: none;
 }
+
 .category-menu .el-menu-item {
   border-radius: 8px;
   margin-bottom: 8px;
@@ -187,10 +201,13 @@ function getFaviconUrl(url?: string) {
   padding: 12px 20px;
   transition: background 0.2s, color 0.2s;
 }
-.category-menu .el-menu-item.is-active, .category-menu .el-menu-item:hover {
+
+.category-menu .el-menu-item.is-active,
+.category-menu .el-menu-item:hover {
   background: #e6f0fa;
   color: #409eff;
 }
+
 .category-menu i {
   font-size: 16px;
   vertical-align: middle;
@@ -200,9 +217,11 @@ function getFaviconUrl(url?: string) {
   text-align: center;
   display: inline-block;
 }
+
 .content {
   flex: 1;
 }
+
 .resource-list-card {
   background-color: var(--bg-color);
   border-radius: 8px;
@@ -211,13 +230,15 @@ function getFaviconUrl(url?: string) {
   margin-bottom: 20px;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 }
+
 .resource-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 20px;
   margin-top: 20px;
 }
-.resource-item {
+
+.resource-card {
   background-color: var(--bg-color-page);
   border-radius: 8px;
   padding: 15px;
@@ -228,39 +249,49 @@ function getFaviconUrl(url?: string) {
   align-items: center;
   gap: 15px;
 }
-.resource-item:hover {
+
+.resource-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
+
 .resource-icon {
   width: 50px;
   height: 50px;
   flex-shrink: 0;
 }
+
 .resource-icon img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   border-radius: 8px;
 }
+
 .resource-info {
   flex: 1;
 }
-.resource-info h4 {
+
+.resource-info h3 {
   margin: 0 0 5px 0;
   color: var(--text-color-primary);
   font-size: 16px;
+  font-weight: bold;
 }
+
 .resource-info p {
   margin: 0 0 10px 0;
   color: var(--text-color-secondary);
   font-size: 14px;
   line-height: 1.4;
 }
+
 .content-collapsed {
   margin-left: 0;
 }
+
 @media (max-width: 768px) {
+
   /* .container {
     flex-direction: column;
   } */
@@ -270,5 +301,52 @@ function getFaviconUrl(url?: string) {
   .resource-list {
     grid-template-columns: 1fr;
   }
+}
+
+:deep(.dark .el-tabs--card > .el-tabs__header) {
+  border-bottom: 2px solid #333 !important;
+}
+
+:deep(.dark .el-tabs--card .el-tabs__item) {
+  border: 1.5px solid #333 !important;
+  border-bottom: none !important;
+  background: #23272e !important;
+  color: #bbb !important;
+}
+
+:deep(.dark .el-tabs--card .el-tabs__item.is-active) {
+  background: #181a20 !important;
+  color: #409EFF !important;
+  border-bottom: 2.5px solid #181a20 !important;
+  box-shadow: 0 2px 8px #222 !important;
+}
+
+:deep(.dark) .resource-card {
+  background-color: var(--el-bg-color-page, #181a20) !important;
+  border: 1px solid var(--el-border-color-lighter, #333) !important;
+  box-shadow: none !important;
+}
+
+:deep(.dark) .resource-info h3 {
+  color: var(--el-text-color-primary, #fff) !important;
+}
+
+:deep(.dark) .resource-info p {
+  color: var(--el-text-color-secondary, #bbb) !important;
+}
+
+:deep(.el-tabs__item) {
+  font-size: 18px !important;
+  font-weight: bold;
+  letter-spacing: 1px;
+  height: 60px;
+  line-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+:deep(.el-tabs) {
+    --el-tabs-header-height: 60px;
+    display: flex;
 }
 </style>

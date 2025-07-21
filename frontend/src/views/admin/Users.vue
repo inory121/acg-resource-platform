@@ -46,8 +46,8 @@
       <el-table-column prop="email" label="邮箱" />
       <el-table-column label="角色">
         <template #default="scope">
-          <span :class="['role-badge', scope.row.role === 'admin' ? 'admin' : 'user']">
-            {{ scope.row.role === 'admin' ? '管理员' : '普通用户' }}
+          <span :class="['role-badge', (scope.row.role === 'admin' || scope.row.role === 'ADMIN') ? 'admin' : 'user']">
+            {{ (scope.row.role === 'admin' || scope.row.role === 'ADMIN') ? '管理员' : '普通用户' }}
           </span>
         </template>
       </el-table-column>
@@ -266,6 +266,16 @@ onMounted(() => {
   min-width: 120px;
 }
 
+.page-content, .main-content {
+  overflow-x: auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.el-table {
+  max-width: 100%;
+}
+
 .users-table {
   background: white;
   border-radius: 8px;
@@ -366,7 +376,7 @@ th {
 
 .pagination {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   gap: 15px;
   margin-top: 20px;

@@ -6,6 +6,7 @@ import com.acg.entity.ResourceCategory;
 import com.acg.mapper.ResourceCategoryMapper;
 import com.acg.mapper.ResourceMapper;
 import com.acg.service.ResourceService;
+import com.acg.util.JwtUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -13,6 +14,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,7 +34,8 @@ public class ResourceServiceImpl implements ResourceService {
     
     private final ResourceMapper resourceMapper;
     private final ResourceCategoryMapper resourceCategoryMapper;
-    
+    private final JwtUtil jwtUtil;
+
     @Override
     public IPage<Resource> getResourcePage(Page<Resource> page, String keyword, Long categoryId) {
         QueryWrapper<Resource> queryWrapper = new QueryWrapper<>();
@@ -44,7 +50,7 @@ public class ResourceServiceImpl implements ResourceService {
             queryWrapper.eq("category_id", categoryId);
         }
         
-        queryWrapper.orderByDesc("created_time");
+        queryWrapper.orderByDesc("sort_order").orderByDesc("created_time");
         
         return resourceMapper.selectPage(page, queryWrapper);
     }
@@ -61,12 +67,18 @@ public class ResourceServiceImpl implements ResourceService {
     @Override
     @Transactional
     public Resource createResource(Resource resource) {
+        // 从请求中获取当前登录用户ID
+        Long userId = getCurrentUserId();
+        
+        // 设置资源的基本属性
         resource.setCreatedTime(LocalDateTime.now());
         resource.setUpdatedTime(LocalDateTime.now());
         resource.setViewCount(0L);
         resource.setLikeCount(0L);
         resource.setStatus(1);
-        
+        resource.setCreatedBy(userId);
+
+        // 插入资源到数据库
         resourceMapper.insert(resource);
         return resource;
     }
@@ -185,7 +197,6 @@ public class ResourceServiceImpl implements ResourceService {
     }
     
     // 管理员功能方法实现
-    
     @Override
     public Long getTotalResourceCount() {
         return resourceMapper.selectCount(null);
@@ -199,5 +210,24 @@ public class ResourceServiceImpl implements ResourceService {
     @Override
     public Long getTotalViewCount() {
         return resourceMapper.selectTotalViewCount();
+    }
+    
+    /**
+     * 获取当前登录用户的ID
+     */
+    private Long getCurrentUserId() {
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attributes == null) {
+            throw new BusinessException("无法获取当前用户信息");
+        }
+        
+        HttpServletRequest request = attributes.getRequest();
+        String token = request.getHeader("Authorization");
+        if (token == null || !token.startsWith("Bearer ")) {
+            throw new BusinessException("未登录");
+        }
+        
+        token = token.substring(7);
+        return jwtUtil.getUserIdFromToken(token);
     }
 }

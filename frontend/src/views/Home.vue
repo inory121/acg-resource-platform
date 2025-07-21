@@ -3,7 +3,7 @@
     <!-- 主要内容区域 -->
     <div class="main-content">
       <!-- 顶部搜索框 -->
-      <div class="search-box">
+      <!-- <div class="search-box">
         <el-input
           v-model="searchKeyword"
           placeholder="搜索资源..."
@@ -20,7 +20,7 @@
         <ul v-if="showHistory && searchHistory.length" class="search-history-list">
           <li v-for="item in searchHistory" :key="item" @mousedown.prevent="handleHistorySelect(item)">{{ item }}</li>
         </ul>
-      </div>
+      </div> -->
       <div class="container">
         <!-- 左侧导航 -->
         <CategorySidebar :active-category="activeCategory" :categories="subCategories" :collapsed="sidebarCollapsed" @toggle="handleSidebarToggle" @select="handleCategorySelect" />
