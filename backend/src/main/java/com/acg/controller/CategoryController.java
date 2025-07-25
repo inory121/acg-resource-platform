@@ -5,7 +5,6 @@ import com.acg.entity.ResourceCategory;
 import com.acg.mapper.ResourceCategoryMapper;
 import com.acg.service.ResourceService;
 import jakarta.annotation.Resource;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
