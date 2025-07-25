@@ -87,16 +87,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch, onActivated, onBeforeUnmount } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { Search, Moon, Sunny, Folder } from '@element-plus/icons-vue'
-import { getResourceList, getHotResources, getLatestResources } from '@/api/resource'
-import { getCategories } from '@/api/category'
-import type { Ref } from 'vue'
+import type {Ref} from 'vue'
+import {computed, onActivated, onBeforeUnmount, onMounted, ref, watch} from 'vue'
+import {useRoute, useRouter} from 'vue-router'
+import {ElMessage} from 'element-plus'
+import {getHotResources, getLatestResources} from '@/api/resource'
 import CategorySidebar from '@/components/CategorySidebar.vue'
-import { useCategoryStore } from '@/store/category'
-import { storeToRefs } from 'pinia'
+import {useCategoryStore} from '@/store/category'
+import {storeToRefs} from 'pinia'
 
 interface ResourceItem {
   id: number

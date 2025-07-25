@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { ElMessage } from 'element-plus';
 
 const service = axios.create({
   baseURL: '/api', // 设置统一的请求前缀

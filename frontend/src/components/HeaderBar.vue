@@ -67,11 +67,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useUserStore } from '@/store/user'
-import { ElMessage } from 'element-plus'
-import { Search, Moon, Sunny } from '@element-plus/icons-vue'
+import {computed, onMounted, ref} from 'vue'
+import {useRouter} from 'vue-router'
+import {useUserStore} from '@/store/user'
+import {ElMessage} from 'element-plus'
+import {Moon, Search, Sunny} from '@element-plus/icons-vue'
 
 const router = useRouter()
 const userStore = useUserStore()

@@ -69,8 +69,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { getCategories, createCategory, updateCategory, deleteCategory as deleteCategoryApi } from '@/api/category'
+import {computed, onMounted, ref} from 'vue'
+import {createCategory, deleteCategory as deleteCategoryApi, getCategories, updateCategory} from '@/api/category'
 
 interface Category {
   id: number
