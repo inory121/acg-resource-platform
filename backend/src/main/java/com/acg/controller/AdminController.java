@@ -103,7 +103,7 @@ public class AdminController {
     public Result<String> triggerResourceStatusCheck() {
         try {
             // 异步执行，避免长时间阻塞请求
-            new Thread(() -> resourceService.autoCheckResourceStatus()).start();
+            new Thread(resourceService::autoCheckResourceStatus).start();
             return Result.success("已开始后台检测，请稍后刷新查看结果。");
         } catch (Exception e) {
             return Result.error("触发检测失败: " + e.getMessage());

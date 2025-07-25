@@ -24,10 +24,10 @@
               <div class="resource-icon">
                 <img :src="getFaviconUrl(res.url)" :alt="res.name" />
               </div>
-              <div class="resource-info">
+                <div class="resource-info">
                 <h3>{{ res.name }}</h3>
-                <p>{{ res.description }}</p>
-              </div>
+                  <p>{{ res.description }}</p>
+                </div>
             </div>
           </div>
         </el-card>

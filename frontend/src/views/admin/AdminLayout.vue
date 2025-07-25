@@ -103,7 +103,7 @@ onMounted(() => {
 <style>
 .admin-layout {
   display: flex;
-  height: 100vh;
+  height: 100vh; /* 让整体高度始终等于视口高度 */
 }
 
 .theme-toggle-btn {
@@ -114,11 +114,13 @@ onMounted(() => {
 
 .admin-sidebar {
   width: 250px;
+  height: 100vh; /* 关键：始终充满视口 */
   background: var(--admin-sidebar-bg, #2c3e50);
   color: var(--admin-sidebar-color, #fff);
   transition: width 0.3s;
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
 }
 
 .admin-sidebar.collapsed {
@@ -224,6 +226,8 @@ onMounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  overflow: auto; /* 关键：右侧内容超出时出现滚动条 */
   background: #f8f9fa;
 }
 

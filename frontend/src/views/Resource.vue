@@ -134,7 +134,7 @@ function openResourceUrl() {
 watch(
   () => route.params.id,
   (newId) => {
-    if (newId) {
+  if (newId) {
       fetchResource(Number(newId));
     }
   },

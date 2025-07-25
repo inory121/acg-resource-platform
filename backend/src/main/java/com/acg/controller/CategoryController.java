@@ -4,8 +4,7 @@ import com.acg.common.Result;
 import com.acg.entity.ResourceCategory;
 import com.acg.mapper.ResourceCategoryMapper;
 import com.acg.service.ResourceService;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import lombok.RequiredArgsConstructor;
+import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,10 +15,10 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class CategoryController {
 
-    @Autowired
+    @Resource
     private ResourceService resourceService;
 
-    @Autowired
+    @Resource
     private ResourceCategoryMapper categoryMapper;
 
     /**
@@ -54,8 +53,8 @@ public class CategoryController {
     @PostMapping
     public Result<ResourceCategory> createCategory(@RequestBody ResourceCategory category) {
         try {
-            categoryMapper.insert(category);
-            return Result.success(category);
+            ResourceCategory created = resourceService.createCategory(category);
+            return Result.success(created);
         } catch (Exception e) {
             return Result.error("创建分类失败: " + e.getMessage());
         }
@@ -68,12 +67,8 @@ public class CategoryController {
     public Result<ResourceCategory> updateCategory(@PathVariable Long id, @RequestBody ResourceCategory category) {
         try {
             category.setId(id);
-            int updatedRows = categoryMapper.updateById(category);
-            if (updatedRows > 0) {
-                return Result.success(category);
-            } else {
-                return Result.error("分类不存在");
-            }
+            ResourceCategory updated = resourceService.updateCategory(category);
+            return Result.success(updated);
         } catch (Exception e) {
             return Result.error("更新分类失败: " + e.getMessage());
         }
@@ -85,8 +80,8 @@ public class CategoryController {
     @DeleteMapping("/{id}")
     public Result<String> deleteCategory(@PathVariable Long id) {
         try {
-            int deletedRows = categoryMapper.deleteById(id);
-            if (deletedRows > 0) {
+            boolean deleted = resourceService.deleteCategory(id);
+            if (deleted) {
                 return Result.success("分类删除成功");
             } else {
                 return Result.error("分类不存在或删除失败");

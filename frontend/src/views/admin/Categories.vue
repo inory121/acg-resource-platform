@@ -45,16 +45,16 @@
           <el-input v-model="categoryForm.code" type="text" required placeholder="唯一英文编码，如 anime-online" />
         </el-form-item>
         <el-form-item label="描述">
-          <el-input v-model="categoryForm.description" type="textarea" rows="3" />
+          <el-input v-model="categoryForm.description" type="textarea" :rows="3" />
         </el-form-item>
         <el-form-item label="图标">
           <el-input v-model="categoryForm.icon" type="text" placeholder="图标类名，如: fas fa-folder" />
         </el-form-item>
         <el-form-item label="排序">
-          <el-input v-model="categoryForm.sortOrder" type="number" min="0" />
+          <el-input v-model.number="categoryForm.sortOrder" type="number" min="0" />
         </el-form-item>
         <el-form-item label="父级分区">
-          <el-select v-model="categoryForm.parentId" placeholder="请选择父级分区">
+          <el-select v-model.number="categoryForm.parentId" placeholder="请选择父级分区">
             <el-option :value="0" label="无（主分区）" />
             <el-option v-for="cat in mainCategories" :key="cat.id" :value="cat.id" :label="cat.name" />
           </el-select>
@@ -172,7 +172,7 @@ const deleteCategory = async (id: number) => {
 const submitCategory = async () => {
   try {
     if (showEditModal.value && editingCategory.value) {
-      await updateCategory(editingCategory.value.id, categoryForm.value)
+      await updateCategory(editingCategory.value.id, { ...categoryForm.value, id: editingCategory.value.id })
     } else {
       await createCategory(categoryForm.value)
     }

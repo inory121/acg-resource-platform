@@ -3,7 +3,7 @@
     <!-- 页面头部 -->
     <div class="page-header">
       <h2>资源管理</h2>
-      <el-button class="add-btn" @click="showAddModal = true" type="primary">
+      <el-button class="add-btn" @click="openAddModal" type="primary">
         <i class="fas fa-plus"></i>
         添加资源
       </el-button>
@@ -18,13 +18,6 @@
           </template>
         </el-input>
       </div>
-
-      <el-select v-model="selectedCategory" @change="handleSearch" placeholder="全部分类"
-        style="width: 120px; margin-right: 10px;">
-        <el-option label="全部分类" value="" />
-        <el-option v-for="category in categories" :key="category.id" :label="category.name" :value="category.id" />
-      </el-select>
-
       <el-button class="refresh-btn" @click="handleRefreshAndCheck" type="info">
         <i class="fas fa-refresh"></i>
         刷新并检测状态
@@ -32,15 +25,8 @@
     </div>
 
     <!-- 树形资源表格，懒加载模式 -->
-    <el-table
-      :data="tableData"
-      style="width: 100%"
-      :row-key="getRowKey"
-      border
-      lazy
-      :load="loadNode"
-      :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
-    >
+    <el-table :data="tableData" style="width: 100%" :row-key="getRowKey" border lazy :load="loadNode"
+      :tree-props="{ children: 'children', hasChildren: 'hasChildren' }" ref="resourceTable">
       <el-table-column prop="name" label="名称" min-width="180">
         <template #default="scope">
           <template v-if="scope.row.type === 'category'">
@@ -70,9 +56,9 @@
       <el-table-column label="状态" width="100">
         <template #default="scope">
           <template v-if="scope.row.type === 'resource'">
-            <span :class="['status', scope.row.status === 1 ? 'active' : 'inactive']">
+          <span :class="['status', scope.row.status === 1 ? 'active' : 'inactive']">
               {{ scope.row.status === 1 ? '正常' : '无法访问' }}
-            </span>
+          </span>
           </template>
         </template>
       </el-table-column>
@@ -84,14 +70,14 @@
       <el-table-column label="操作" width="140">
         <template #default="scope">
           <template v-if="scope.row.type === 'resource'">
-            <div class="action-buttons">
-              <el-button class="edit-btn" @click="editResource(scope.row)" type="primary" size="small">
-                <i class="fas fa-edit"></i>
-              </el-button>
-              <el-button class="delete-btn" @click="deleteResource(scope.row.id)" type="danger" size="small">
-                <i class="fas fa-trash"></i>
-              </el-button>
-            </div>
+          <div class="action-buttons">
+            <el-button class="edit-btn" @click="editResource(scope.row)" type="primary" size="small">
+              <i class="fas fa-edit"></i>
+            </el-button>
+            <el-button class="delete-btn" @click="deleteResource(scope.row.id)" type="danger" size="small">
+              <i class="fas fa-trash"></i>
+            </el-button>
+          </div>
           </template>
         </template>
       </el-table-column>
@@ -106,19 +92,12 @@
           <el-input v-model="resourceForm.name" type="text" required />
         </el-form-item>
         <el-form-item label="分类">
-          <el-tree-select
-            v-model="resourceForm.categoryId"
-            :data="categoryTreeSelectData"
-            :render-after-expand="false"
-            :props="{ label: 'label', children: 'children', value: 'value' }"
-            placeholder="请选择分类"
-            style="width: 100%"
-            check-strictly
-            clearable
-          />
+          <el-tree-select v-model="resourceForm.categoryId" :data="categoryTreeSelectData" :render-after-expand="false"
+            :props="{ label: 'label', children: 'children', value: 'value' }" placeholder="请选择分类" style="width: 100%"
+            check-strictly clearable />
         </el-form-item>
         <el-form-item label="描述">
-          <el-input v-model="resourceForm.description" type="textarea" rows="3" />
+          <el-input v-model="resourceForm.description" type="textarea" :rows="3" />
         </el-form-item>
         <el-form-item label="资源链接">
           <el-input v-model="resourceForm.url" type="url" required />
@@ -149,7 +128,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
 import { getResourceList, createResource, updateResource, deleteResource as deleteResourceApi, checkAllResourcesStatus } from '@/api/resource'
 import { getCategories } from '@/api/category'
 import { ElMessage, ElNotification } from 'element-plus'
@@ -211,6 +190,9 @@ const showAddEditDialog = computed({
   }
 });
 
+const resourceTable = ref();
+const nodeResolveMap = new Map<number, { row: Category, treeNode: any, resolve: (data: (Category | Resource)[]) => void }>();
+
 // 恢复 buildCategoryResourceTree，并增强循环检测
 function buildCategoryResourceTree(categories: Category[], resources: Resource[]): (Category | Resource)[] {
   const nodes = new Map<number, any>();
@@ -242,7 +224,7 @@ function buildCategoryResourceTree(categories: Category[], resources: Resource[]
       }
     }
   });
-  
+
   // 4. Final pass to set hasChildren for categories and collect roots
   nodes.forEach(node => {
     if (node.type === 'category') {
@@ -264,20 +246,23 @@ const getRowKey = (row: Category | Resource) => {
 // 懒加载树表格：只加载顶级分类，点击展开时再加载子分类和资源
 const loadTopLevelData = async () => {
   try {
+    // 只查顶级分类，保证hasChildren字段正确
     const response = await getCategories({ parentId: 0 });
-    if (response.data.code === 200) {
-      const topLevelCats = response.data.data;
-      tableData.value = topLevelCats.map((cat: Category) => ({
-        ...cat,
-        type: 'category',
-      }));
-    }
+    tableData.value = (response.data.data || []).map((cat: Category) => ({
+      ...cat,
+      type: 'category'
+    }));
+    // 弹窗下拉树依然需要全量分类
+    const allCatsRes = await getCategories();
+    categories.value = allCatsRes.data.data || [];
   } catch (error) {
     console.error('Failed to load top level data:', error);
   }
 };
 
 const loadNode = async (row: Category, treeNode: unknown, resolve: (data: (Category | Resource)[]) => void) => {
+  // 缓存 resolve 参数，便于后续刷新
+  nodeResolveMap.set(row.id, { row, treeNode, resolve });
   if (row.type === 'category') {
     try {
       const [subCategoriesRes, resourcesRes] = await Promise.all([
@@ -297,11 +282,28 @@ const loadNode = async (row: Category, treeNode: unknown, resolve: (data: (Categ
         hasChildren: false // 资源永远是叶子节点
       }));
 
-      resolve([...subCategories, ...resources]);
+      const data = [...subCategories, ...resources];
+      if (data.length > 0) {
+        resolve(data);
+      } else {
+        // 若无数据，手动置空子节点，防止脏数据
+        if (resourceTable.value) {
+          resourceTable.value.store.states.lazyTreeNodeMap.value[row.id] = [];
+        }
+        resolve([]);
+      }
     } catch (error) {
       console.error('Failed to load node:', error);
       resolve([]);
     }
+  }
+};
+
+// 刷新指定父节点的子节点数据
+const refreshNode = (parentId: number) => {
+  const map = nodeResolveMap.get(parentId);
+  if (map) {
+    loadNode(map.row, map.treeNode, map.resolve);
   }
 };
 
@@ -399,8 +401,10 @@ const submitResource = async () => {
       await createResource(submitData)
     }
 
-    closeModal()
-    await loadAllData()
+    // 先保存 parentId，再重置表单
+    const parentId = resourceForm.value.categoryId;
+    closeModal();
+    refreshNode(parentId);
   } catch (error) {
     console.error('保存资源失败:', error)
   }
@@ -419,6 +423,15 @@ const closeModal = () => {
     tags: '',
     status: 1,
     sortOrder: 0
+  }
+}
+
+const openAddModal = async () => {
+  showAddModal.value = true;
+  // 获取所有分类（不带 parentId，拿到完整树）
+  const response = await getCategories();
+  if (response.data.code === 200) {
+    categories.value = response.data.data;
   }
 }
 
@@ -564,23 +577,6 @@ th {
 .action-buttons {
   display: flex;
   gap: 8px;
-}
-
-.edit-btn,
-.delete-btn {
-  background: none;
-  border: none;
-  padding: 6px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.edit-btn {
-  color: #3498db;
-}
-
-.delete-btn {
-  color: #e74c3c;
 }
 
 .pagination {

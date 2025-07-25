@@ -27,9 +27,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 
 /**
@@ -117,13 +115,11 @@ public class ResourceServiceImpl implements ResourceService {
     @Override
     @Transactional
     public Resource updateResource(Long id, Resource resource) {
-        Resource existingResource = getResourceById(id);
-        
-        BeanUtils.copyProperties(resource, existingResource, "id", "createdTime", "viewCount", "likeCount", "status", "createdBy");
-        existingResource.setUpdatedTime(LocalDateTime.now());
-        
-        resourceMapper.updateById(existingResource);
-        return existingResource;
+        resource.setId(id);
+        resource.setUpdatedTime(LocalDateTime.now());
+        resourceMapper.updateById(resource);
+        // 重新获取最新的资源信息并返回
+        return resourceMapper.selectById(id);
     }
     
     @Override
@@ -193,7 +189,7 @@ public class ResourceServiceImpl implements ResourceService {
             throw new BusinessException("分类不存在");
         }
         
-        BeanUtils.copyProperties(category, existingCategory, "id", "createdTime");
+        BeanUtils.copyProperties(category, existingCategory);
         existingCategory.setUpdatedTime(LocalDateTime.now());
         
         resourceCategoryMapper.updateById(existingCategory);
@@ -243,47 +239,30 @@ public class ResourceServiceImpl implements ResourceService {
     }
     
     public List<ResourceCategory> getCategoriesWithChildrenStatus(Long parentId) {
-        // 1. 查询当前层级的所有分类
         QueryWrapper<ResourceCategory> wrapper = new QueryWrapper<>();
         if (parentId == null) {
-            // parentId 为 null 时，查询所有分类，而不仅仅是顶级分类
-            // wrapper.eq("parent_id", 0); // 移除此行
+            // 查全表，不处理hasChildren，适用于下拉树等全量场景
+            return resourceCategoryMapper.selectList(wrapper);
         } else {
             wrapper.eq("parent_id", parentId);
-        }
-        List<ResourceCategory> categories = resourceCategoryMapper.selectList(wrapper);
-        if (categories.isEmpty()) return categories;
+            List<ResourceCategory> categories = resourceCategoryMapper.selectList(wrapper);
+            if (categories.isEmpty()) return categories;
+            // 每个分类单独判断是否有下级
+            for (ResourceCategory cat : categories) {
+                // 判断是否有子分区
+                QueryWrapper<ResourceCategory> childWrapper = new QueryWrapper<>();
+                childWrapper.eq("parent_id", cat.getId());
+                Long childCount = resourceCategoryMapper.selectCount(childWrapper);
 
-        // 如果是查询所有分类，则直接返回，hasChildren 的判断交给前端或者在前端重新构建
-        if (parentId == null) {
+                // 判断是否有资源
+                QueryWrapper<Resource> resWrapper = new QueryWrapper<>();
+                resWrapper.eq("category_id", cat.getId());
+                Long resCount = resourceMapper.selectCount(resWrapper);
+
+                cat.setHasChildren((childCount != null && childCount > 0) || (resCount != null && resCount > 0));
+            }
             return categories;
         }
-
-        // 2. 查询这些分类的所有子分类 (只在查询特定父ID时执行)
-        List<Long> ids = categories.stream().map(ResourceCategory::getId).collect(Collectors.toList());
-        QueryWrapper<ResourceCategory> subCatWrapper = new QueryWrapper<>();
-        subCatWrapper.in("parent_id", ids);
-        List<ResourceCategory> subCategories = resourceCategoryMapper.selectList(subCatWrapper);
-
-        // 3. 查询这些分类下的所有资源
-        QueryWrapper<Resource> resWrapper = new QueryWrapper<>();
-        resWrapper.in("category_id", ids);
-        List<Resource> resources = resourceMapper.selectList(resWrapper);
-
-        // 4. 统计每个分类是否有子分类或资源
-        Map<Long, Boolean> hasChildrenMap = new HashMap<>();
-        for (Long id : ids) {
-            boolean hasChildCat = subCategories.stream().anyMatch(c -> c.getParentId().equals(id));
-            boolean hasRes = resources.stream().anyMatch(r -> r.getCategoryId().equals(id));
-            hasChildrenMap.put(id, hasChildCat || hasRes);
-        }
-
-        // 5. 设置 hasChildren 字段
-        for (ResourceCategory cat : categories) {
-            cat.setHasChildren(hasChildrenMap.getOrDefault(cat.getId(), false));
-        }
-
-        return categories;
     }
     
     /**
@@ -310,7 +289,7 @@ public class ResourceServiceImpl implements ResourceService {
      * 检查HTTP状态码、页面关键字、HTTPS证书，多次失败才标记异常
      */
     @Override
-    @Scheduled(cron = "0 */10 * * * ?")
+    @Scheduled(cron = "0 0 * * * ?")
     public void autoCheckResourceStatus() {
         List<Resource> resources = resourceMapper.selectList(null);
         for (Resource res : resources) {
@@ -337,7 +316,6 @@ public class ResourceServiceImpl implements ResourceService {
             } catch (Exception e) {
                 errorMessage = e.getMessage();
                 logger.error("检测资源失败 [{} - {}]: {}", res.getName(), res.getUrl(), errorMessage, e);
-                ok = false;
             }
 
             if (ok) {

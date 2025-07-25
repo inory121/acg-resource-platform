@@ -2,6 +2,7 @@ package com.acg.config;
 
 import com.acg.common.exception.UnauthorizedException;
 import com.acg.util.JwtUtil;
+import jakarta.annotation.Nonnull;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,7 @@ public class JwtInterceptor implements HandlerInterceptor {
     private final JwtUtil jwtUtil;
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(@Nonnull HttpServletRequest request,@Nonnull HttpServletResponse response,@Nonnull Object handler) {
         String token = request.getHeader("Authorization");
         
         if (token == null || !token.startsWith("Bearer ")) {

@@ -220,7 +220,6 @@ function goUserCenter() {
 .category-menu i {
   font-size: 16px;
   vertical-align: middle;
-  margin-right: 8px;
   color: #666;
   width: 24px;
   text-align: center;
@@ -259,6 +258,19 @@ function goUserCenter() {
   width: 24px;
   text-align: center;
   display: block;
+}
+.category-menu .el-menu-item span {
+  display: inline-block;
+  min-width: 90px;
+  max-width: 120px;
+  width: 100px; /* 固定宽度，保证对齐 */
+  text-align: center;
+  font-family: 'Microsoft YaHei', 'PingFang SC', 'SimHei', monospace;
+  font-variant-east-asian: full-width; /* 让中英文等宽 */
+  letter-spacing: 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 @media (max-width: 768px) {
   /* .sidebar {

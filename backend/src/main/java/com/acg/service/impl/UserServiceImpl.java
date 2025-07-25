@@ -211,14 +211,14 @@ public class UserServiceImpl implements UserService {
     
     @Override
     public boolean isUsernameExists(String username) {
-        return userMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<User>()
+        return userMapper.selectCount(new QueryWrapper<User>()
                 .eq("username", username)
                 .eq("deleted", 0)) > 0;
     }
     
     @Override
     public boolean isEmailExists(String email) {
-        return userMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<User>()
+        return userMapper.selectCount(new QueryWrapper<User>()
                 .eq("email", email)
                 .eq("deleted", 0)) > 0;
     }
@@ -227,7 +227,7 @@ public class UserServiceImpl implements UserService {
      * 通过用户名查找未删除用户（MyBatis-Plus Wrapper 封装）
      */
     private User getUserByUsername(String username) {
-        return userMapper.selectOne(new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<User>()
+        return userMapper.selectOne(new QueryWrapper<User>()
             .eq("username", username)
             .eq("deleted", 0));
     }
@@ -298,7 +298,7 @@ public class UserServiceImpl implements UserService {
     
     @Override
     public List<User> getRecentUsers(int limit) {
-        return userMapper.selectList(new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<User>()
+        return userMapper.selectList(new QueryWrapper<User>()
             .eq("deleted", 0)
             .orderByDesc("created_time")
             .last("LIMIT " + limit));
