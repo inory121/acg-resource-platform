@@ -45,13 +45,14 @@
   <el-empty v-else description="资源不存在" />
 </template>
 <script setup lang="ts">
-import {computed, onMounted, ref, watch} from 'vue';
-import {useRoute, useRouter} from 'vue-router';
-import {getResourceById} from '@/api/resource';
+import { ref, computed, watch, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { getResourceById } from '@/api/resource';
 import CategorySidebar from '@/components/CategorySidebar.vue';
-import type {CategoryItem} from '@/store/category';
-import {useCategoryStore} from '@/store/category';
-import {storeToRefs} from 'pinia';
+import MainCategoryTabs from '@/components/MainCategoryTabs.vue';
+import { useCategoryStore } from '@/store/category';
+import { storeToRefs } from 'pinia';
+import type { CategoryItem } from '@/store/category';
 
 export interface Resource {
   id: number;

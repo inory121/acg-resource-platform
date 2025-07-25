@@ -15,8 +15,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import {defineEmits, defineProps} from 'vue'
-
+import { defineProps, defineEmits } from 'vue'
 interface CategoryItem {
   id: number
   name: string

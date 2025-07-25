@@ -53,11 +53,12 @@
   </aside>
 </template>
 <script setup lang="ts">
-import type {CategoryItem} from '@/store/category'
-import {useCategoryStore} from '@/store/category'
-import {computed} from 'vue'
-import {useUserStore} from '@/store/user'
-import {useRouter} from 'vue-router'
+import { storeToRefs } from 'pinia'
+import { useCategoryStore } from '@/store/category'
+import type { CategoryItem } from '@/store/category'
+import { computed, watch } from 'vue'
+import { useUserStore } from '@/store/user'
+import { useRouter } from 'vue-router'
 
 const props = defineProps<{
   activeCategory: string | number,

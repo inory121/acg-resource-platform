@@ -36,14 +36,15 @@
   </div>
 </template>
 <script setup lang="ts">
-import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue';
-import {useRoute, useRouter} from 'vue-router';
-import {getResourceList} from '@/api/resource';
+import { ref, onMounted, watch, computed, onBeforeUnmount } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import { getResourceList } from '@/api/resource';
 import CategorySidebar from '@/components/CategorySidebar.vue'
-import type {CategoryItem} from '@/store/category'
-import {useCategoryStore} from '@/store/category'
-import {storeToRefs} from 'pinia'
-import {ElTabPane, ElTabs, type TabsPaneContext} from 'element-plus';
+import MainCategoryTabs from '@/components/MainCategoryTabs.vue'
+import type { CategoryItem } from '@/store/category'
+import { storeToRefs } from 'pinia'
+import { useCategoryStore } from '@/store/category'
+import { ElTabs, ElTabPane, type TabsPaneContext } from 'element-plus';
 
 const router = useRouter();
 const route = useRoute();

@@ -91,11 +91,11 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, reactive, ref} from 'vue';
-import {useUserStore} from '@/store/user';
-import type {FormInstance, FormRules} from 'element-plus';
-import {ElMessage} from 'element-plus';
-import {Plus} from '@element-plus/icons-vue';
+import { ref, reactive, computed, onMounted } from 'vue';
+import { useUserStore } from '@/store/user';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import { Plus } from '@element-plus/icons-vue';
+import type { FormInstance, FormRules } from 'element-plus';
 
 const userStore = useUserStore();
 const activeTab = ref('basic');

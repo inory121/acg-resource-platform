@@ -128,16 +128,10 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, ref} from 'vue'
-import {
-  checkAllResourcesStatus,
-  createResource,
-  deleteResource as deleteResourceApi,
-  getResourceList,
-  updateResource
-} from '@/api/resource'
-import {getCategories} from '@/api/category'
-import {ElMessage, ElNotification} from 'element-plus'
+import { ref, onMounted, computed, nextTick } from 'vue'
+import { getResourceList, createResource, updateResource, deleteResource as deleteResourceApi, checkAllResourcesStatus } from '@/api/resource'
+import { getCategories } from '@/api/category'
+import { ElMessage, ElNotification } from 'element-plus'
 
 interface Resource {
   id: number

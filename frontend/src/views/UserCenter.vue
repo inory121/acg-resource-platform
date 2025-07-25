@@ -30,9 +30,9 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, ref} from 'vue';
-import {useUserStore} from '@/store/user';
-import {ElMessage} from 'element-plus';
+import { ref, computed, onMounted } from 'vue';
+import { useUserStore } from '@/store/user';
+import { ElMessage } from 'element-plus';
 import ProfileTab from '@/components/user/ProfileTab.vue';
 import FavoritesTab from '@/components/user/FavoritesTab.vue';
 import HistoryTab from '@/components/user/HistoryTab.vue';

@@ -1,7 +1,7 @@
-import {defineStore} from 'pinia';
-import {ref} from 'vue';
-import type {RegisterParams} from '@/api/user';
-import {getUserProfile, login, register, updatePassword, updateUserProfile} from '@/api/user';
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+import { login, getUserProfile, register, updateUserProfile, updatePassword } from '@/api/user';
+import type { RegisterParams } from '@/api/user';
 
 export const useUserStore = defineStore('user', () => {
   const token = ref<string | null>(localStorage.getItem('token'));

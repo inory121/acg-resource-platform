@@ -20,9 +20,9 @@
   </div>
 </template>
 <script setup lang="ts">
-import {ref, watch} from 'vue';
-import {useRoute, useRouter} from 'vue-router';
-import {getResourceList} from '@/api/resource';
+import { ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { getResourceList } from '@/api/resource';
 
 const route = useRoute();
 const router = useRouter();
