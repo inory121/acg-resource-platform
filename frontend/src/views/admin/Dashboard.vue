@@ -49,9 +49,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { getDashboardStats } from '@/api/admin'
-import type { DashboardStats } from '@/api/admin'
+import {computed, onMounted, ref} from 'vue'
+import type {DashboardStats} from '@/api/admin'
+import {getDashboardStats} from '@/api/admin'
 
 const stats = ref<DashboardStats>({
   totalResources: 0,

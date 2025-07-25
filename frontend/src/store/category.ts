@@ -1,5 +1,5 @@
-import { defineStore } from 'pinia'
-import { getCategories } from '@/api/category'
+import {defineStore} from 'pinia'
+import {getCategories} from '@/api/category'
 
 export interface CategoryItem {
   id: number;

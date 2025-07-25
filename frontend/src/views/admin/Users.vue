@@ -103,8 +103,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { getUserList, updateUserStatus, updateUserRole, deleteUser, type User } from '@/api/admin'
+import {onMounted, ref} from 'vue'
+import {deleteUser, getUserList, updateUserRole, updateUserStatus, type User} from '@/api/admin'
 
 const users = ref<User[]>([])
 const searchKeyword = ref('')

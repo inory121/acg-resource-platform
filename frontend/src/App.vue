@@ -9,8 +9,8 @@
 
 <script setup lang="ts">
 import HeaderBar from './components/HeaderBar.vue'
-import { useRoute } from 'vue-router'
-import { computed } from 'vue'
+import {useRoute} from 'vue-router'
+import {computed} from 'vue'
 // 组件逻辑
 const route = useRoute()
 const isAdminRoute = computed(() => route.path.startsWith('/admin'))
